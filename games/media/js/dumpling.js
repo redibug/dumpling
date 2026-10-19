@@ -1652,6 +1652,7 @@
     };
 
     const teletypeFinish = function() {
+        console.log('[teletype] finish called at ' + Date.now());
         if (teletypeState && teletypeState.timer) {
             clearInterval(teletypeState.timer);
         }
@@ -1683,18 +1684,26 @@
     const teletypePump = function() {
         if (teletypeState && teletypeState.timer) return;
         if (!teletypeState) teletypeState = { chars: [], index: 0, timer: null };
+        const t0 = Date.now();
+        console.log('[teletype] pump started at ' + t0 +
+                    ', ' + teletypeState.chars.length + ' units queued');
         teletypeState.timer = setInterval(function() {
             if (!teletypeState) return;
+            const now = Date.now();
             // Reveal a couple of chars, or one whole block unit, per tick.
             let n = 0;
             while (n < 3 && teletypeState.index < teletypeState.chars.length) {
                 const unit = teletypeState.chars[teletypeState.index++];
                 teletypeShow(unit);
                 n++;
+                console.log('[teletype] revealed unit ' + teletypeState.index +
+                            '/' + teletypeState.chars.length +
+                            ' at +' + (now - t0) + 'ms');
                 // Block units (headings, list items) get their own tick.
                 if (unit.tagName && /^(H[1-6]|LI)$/.test(unit.tagName)) break;
             }
             if (teletypeState.index >= teletypeState.chars.length) {
+                console.log('[teletype] finished at +' + (Date.now() - t0) + 'ms');
                 teletypeFinish();
             }
         }, 40);
