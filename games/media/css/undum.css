@@ -158,6 +158,8 @@ ul.options {
     list-style-type: none;
     border-radius: 1em;
     overflow: hidden;
+    -webkit-box-shadow: 0 4px 16px rgba(190,90,130,0.18);
+            box-shadow: 0 4px 16px rgba(190,90,130,0.18);
 }
 ul.options li {
     border-bottom: 1px solid #f7c9dc;
@@ -200,10 +202,16 @@ a:hover {
 img.float_right {
     float: right;
     margin: 1.1em 0 1.1em 1.1em;
+    border-radius: 0.6em;
+    -webkit-box-shadow: 0 4px 14px rgba(190,90,130,0.25);
+            box-shadow: 0 4px 14px rgba(190,90,130,0.25);
 }
 img.float_left {
     float: left;
     margin: 1.1em 1.1em 1.1em 0;
+    border-radius: 0.6em;
+    -webkit-box-shadow: 0 4px 14px rgba(190,90,130,0.25);
+            box-shadow: 0 4px 14px rgba(190,90,130,0.25);
 }
 
 #toolbar {
