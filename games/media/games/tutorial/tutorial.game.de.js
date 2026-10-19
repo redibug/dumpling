@@ -8,6 +8,10 @@
 /* Eine eindeutige Kennung fuer das Spiel (wird nicht im Spiel angezeigt)
  * Man kann eine UUID benutzen oder etwas anderes, was garantiert einzigartig
  * ist, z.B. eine eigene URL oder eine Variation der eigenen E-Mail-Adresse). */
+/* Pick a Dumpling theme. Built-in themes live in media/themes/:
+ * "strawberry-milk" (the default) and "undum" (the classic look). */
+dumpling.theme = "strawberry-milk";
+
 dumpling.game.id = "349baf43-9ade-49a8-86d0-24e3de3ce072";
 
 /* Eine Zeichenkette, die angibt, um welche Version des Spiels es sich handelt. 

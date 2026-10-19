@@ -1,12 +1,10 @@
-/* Dumpling default theme: strawberry milk.
-   Soft pink paper, rounded everything, shoujo manga vibes. */
-
+@import url("https://fonts.googleapis.com/css2?family=Tangerine&display=swap");
+/* Original Undum theme (Ian Millington), preserved as-is. */
 body {
-    background: #ffd9e9 url("../img/page_bg.jpg") repeat left top;
-    font-family: Quicksand, "Trebuchet MS", Verdana, sans-serif;
+    background: #170804 url("../img/page_bg.jpg") repeat-x left top;
+    font-family: Palatino, Times, "Times New Roman", serif;
     font-size: 18px;
     line-height: 1.6em;
-    color: #5c2b45;
     background-attachment: fixed;
     overflow-y: scroll;
 }
@@ -22,57 +20,55 @@ body {
 
 /* The title block */
 #title, #title .label, #content, .tools {
-    border-radius: 1.2em;
+    border-radius: 2px;
 }
 #title {
     max-width: 28em;
-    background: #ffc4da url("../img/title_bg.jpg") repeat -1.1em -1.1em;
+    background: #e6e6c6 url("../img/title_bg.jpg") repeat -1.1em -1.1em;
     margin: 2.2em auto 1.1em auto;
     padding: 1.7em;
-    border: 0.6em solid rgba(255,255,255,0.65);
-    -webkit-box-shadow: 0 6px 28px rgba(190,90,130,0.35);
-            box-shadow: 0 6px 28px rgba(190,90,130,0.35);
+    border: 1.1em solid rgba(0,0,0,0.25);
     cursor: pointer; /* Until we click to start. */
 }
 #title .label {
     overflow: hidden;
-    background: #fffafc url("../img/text_bg.jpg") repeat left top;
+    background: #e6e6c6 url("../img/text_bg.jpg") repeat left top;
     padding: 2.0em;
     margin: auto;
     max-width: 18em;
-    -webkit-box-shadow: 0 0 12px rgba(190,90,130,0.25);
-            box-shadow: 0 0 12px rgba(190,90,130,0.25);
+    -webkit-box-shadow: 0 0 4px rgba(0,0,0,0.4);
+            box-shadow: 0 0 4px rgba(0,0,0,0.4);
     position: relative;
 }
 #title h1 {
     font-size: 1.6em;
     line-height: 1.4em;
     letter-spacing: 0.2em;
-    font-weight: 600;
+    font-weight: normal;
     padding-bottom: 1.1em;
-    border-bottom: 1px solid #e88cae;
+    border-bottom: 1px solid #321;
 }
 #title h2 {
     font-size: 1.2em;
-    font-weight: 500;
+    font-weight: normal;
     text-align: center;
     margin: 1.1em 0 0 0;
 }
 #title h3 {
     font-size: 1.0em;
-    font-weight: 500;
+    font-weight: normal;
     text-align: center;
     margin: 1.1em 0 0 0;
 }
 #title h1, #title h2, #title h3 {
-    color: #a61e4d;
-    text-shadow: rgba(255,255,255,0.8) 2px 2px 2px,
-    rgba(166,30,77,0.15) -1px -1px 2px;
+    color: rgba(33,17,0,0.9);
+    text-shadow: rgba(255,255,255,0.5) 2px 2px 2px,
+    rgba(0,0,0,0.1) -1px -1px 2px;
 }
 #title h1 span.fancy {
     font-size: 2.5em;
     line-height: 0;
-    font-family: Tangerine, Quicksand, sans-serif;
+    font-family: Tangerine, Palatino, Times, "Times New Roman", serif;
     font-style: italic;
     margin: 0 -0.2em;
 }
@@ -85,7 +81,7 @@ body {
     font-size: 0.9em;
     font-style: italic;
     text-align: center;
-    color: #b76e8e;
+    color: #987;
 }
 #title .noscript_message {
     left: 0;
@@ -95,20 +91,18 @@ body {
     font-size: 0.9em;
     font-style: italic;
     text-align: center;
-    color: #c2255c;
+    color: #943;
 }
 
 /* Main content */
 #content_wrapper {
     max-width: 28em;
     position: relative;
-    background: #fffafc url("../img/text_bg.jpg") repeat left bottom;
+    background: #e6e6c6 url("../img/text_bg.jpg") repeat left top;
     margin: 0.6em auto 1.1em auto;
     padding: 2.8em;
     display: none; /* Shown by Javascript */
     overflow: auto;
-    -webkit-box-shadow: 0 6px 28px rgba(190,90,130,0.25);
-            box-shadow: 0 6px 28px rgba(190,90,130,0.25);
 }
 span.drop + p {
     text-indent: -0.4em;
@@ -120,20 +114,18 @@ p {
 }
 hr {
     border: none;
-    margin: 1.6em 0;
-    text-align: center;
-}
-hr::after {
-    content: "\01F365"; /* steaming dumpling, separating sections */
-    font-size: 1.1em;
+    background-color: rgba(0,0,0,0.25);
+    margin: -1px 0 -1px -2.8em;
+    width: 1.1em;
+    height: 2px;
 }
 p + p, p + img + p, p + hr + p {
     text-indent: 1.6em;
 }
 #content h1 + p:first-line,
 #content h1 + img + p:first-line {
-    font-weight: 600;
-    color: rgba(92,43,69,0.9);
+    font-weight: bold;
+    color: rgba(0,0,0,0.85);
 }
 #content h1 + p:first-letter,
 #content h1 + img + p:first-letter {
@@ -144,29 +136,26 @@ p + p, p + img + p, p + hr + p {
     font-weight: normal;
     font-size: 3.2em;
     line-height: 0.8em;
-    color: #c2255c;
+    color: #210;
 }
 ul {
     margin: 0;
     padding: 0 0 0 1em;
 }
 ul.options {
-    border: 2px solid #f2a4c4;
+    border: 2px solid #876;
     padding: 0;
     margin-top: 0.5em;
     margin-bottom: 0.7em;
     list-style-type: none;
-    border-radius: 1em;
-    overflow: hidden;
-    -webkit-box-shadow: 0 4px 16px rgba(190,90,130,0.18);
-            box-shadow: 0 4px 16px rgba(190,90,130,0.18);
+    border-radius: 4px;
 }
 ul.options li {
-    border-bottom: 1px solid #f7c9dc;
-    padding: 0.5em 1em;
+    border-bottom: 1px solid #876;
+    padding: 0.5em;
 }
 ul.options li:hover {
-    background-color: rgba(255,227,239,0.7);
+    background-color: rgba(153,136,119,0.2);
     cursor: pointer;
 }
 ul.options li:last-child {
@@ -178,25 +167,23 @@ h1 {
     text-transform: uppercase;
     letter-spacing: 2px;
     margin: 2.3em 0 1.1em 0;
-    color: #c2255c;
+    color: #210;
     text-align: center;
 }
 h1:first-child {
     margin-top: 0;
 }
 a {
-    color: #d6336c;
+    color: #900;
     text-decoration: none;
     border-bottom: 1px solid transparent;
 }
 a.raw {
     padding-right: 14px;
-    background: transparent url("../img/external_link.png") no-repeat right 4px;
+    background: transparent url("../../img/external_link.png") no-repeat right 4px;
 }
 a:hover {
-    color: #f06595;
-    border-bottom: 1px dotted #f06595;
-    text-shadow: 0 0 10px rgba(240,101,149,0.65);
+    border-bottom: 1px dotted #900;
 }
 
 img.float_right {
@@ -223,12 +210,10 @@ img.float_left {
     display: none; /* Shown by Javascript */
 }
 .tools {
-    padding: 0.6em 0.9em;
+    padding: 0.6em;
     width: 8.9em;
-    background: #fffafc url("../img/tools_bg.jpg") repeat left top;
+    background: #cec3ae url("../img/tools_bg.jpg") repeat left top;
     position: absolute;
-    -webkit-box-shadow: 0 4px 18px rgba(190,90,130,0.25);
-            box-shadow: 0 4px 18px rgba(190,90,130,0.25);
 }
 .tools p {
     font-size: 0.95em;
@@ -243,46 +228,40 @@ img.float_left {
 
 .tools h1 {
     font-size: 1.0em;
-    font-weight: 600;
-    border-bottom: 1px solid #e88cae;
+    font-weight: normal;
+    border-bottom: 1px solid #321;
     margin-bottom: 0.6em;
 }
 .buttons {
     padding-top: 0.6em;
     margin-top: 0.6em;
-    border-top: 1px solid #e88cae;
+    border-top: 1px solid #321;
     text-align: center;
 }
 .buttons button {
-    font-family: inherit;
-    font-size: 0.85em;
-    font-weight: 600;
-    background: linear-gradient(to bottom, #ff8fb5, #f76b9c);
-    color: #fff;
+    font-size: 0.8em;
+    background: #876;
+    color: #e6e6c6;
     border: none;
-    padding: 0.4em 1.4em;
+    padding: 0.3em 1.0em;
     cursor: pointer;
-    border-radius: 999px;
-    -webkit-box-shadow: 0 2px 8px rgba(214,51,108,0.35);
-            box-shadow: 0 2px 8px rgba(214,51,108,0.35);
+    border-radius: 4px;
 }
 .buttons button:hover {
-    background: linear-gradient(to bottom, #f76b9c, #e64980);
+    background: #987;
 }
 .buttons button + button {
     margin-left: 0.3em;
 }
 .buttons button[disabled], .buttons button[disabled]:hover {
-    background: #f3c6d8;
-    color: #fff;
+    background: #ba9;
+    color: #dcb;
     cursor: default;
-    -webkit-box-shadow: none;
-            box-shadow: none;
 }
 
 #legal {
     max-width: 33em;
-    color: #a06a80;
+    color: #654;
     margin: 1em auto 0 auto;
     padding-bottom: 2.2em;
     display: none; /* Shown by Javascript */
@@ -325,7 +304,7 @@ img.float_left {
     float: right;
 }
 .highlight {
-    background: rgba(255, 178, 209, 0.55);
+    background: rgba(255, 255, 0, 0.75);
     position: absolute;
     left: -4px;
     right: -4px;
@@ -335,7 +314,7 @@ img.float_left {
 #qualities h2 {
     margin: 0.5em 0 0.25em 0;
     font-size: 1.0em;
-    border-bottom: 1px solid #e88cae;
+    border-bottom: 1px solid #321;
 }
 
 .progress_bar {
@@ -345,16 +324,15 @@ img.float_left {
 }
 .progress_bar_track {
     z-index: 100;
-    background: rgba(255,255,255,0.6);
-    border: 2px solid #f2a4c4;
+    background: rgba(255,255,255,0.25);
+    border: 2px solid #876;
     height: 0.75em;
     width: 27.7em;
     clear: both;
-    border-radius: 999px;
-    overflow: hidden;
+    border-radius: 4px;
 }
 .progress_bar_color {
-    background: linear-gradient(to right, #ff9ec7, #f76b9c);
+    background: #987;
     width: 0;
     height: 0.75em;
 }
@@ -362,7 +340,7 @@ img.float_left {
     z-index: 100;
 }
 .progress_bar .name {
-    font-weight: 600;
+    font-weight: bold;
 }
 .progress_bar .value {
     float: right;

@@ -2099,6 +2099,56 @@
     // Alias for backwards compatibility with Undum games and docs.
     window.undum = window.dumpling;
 
+    // -----------------------------------------------------------------------
+    // Theme system
+    // -----------------------------------------------------------------------
+
+    /* Game authors pick a theme with `dumpling.theme = "name"`. Themes live
+       in media/themes/<name>/, each with theme.css, theme-mobile.css, an
+       img/ folder and an optional fonts/ folder. */
+    const themeStylesheetBase = (function() {
+        try {
+            const src = document.currentScript && document.currentScript.src;
+            const i = src ? src.lastIndexOf('/js/dumpling.js') : -1;
+            if (i > 0) return src.slice(0, i) + '/themes/';
+        } catch (e) {}
+        return 'media/themes/';
+    })();
+
+    const applyThemeStylesheets = function(name) {
+        const head = document.head ||
+            document.getElementsByTagName('head')[0];
+        qsa('link[data-dumpling-theme]').forEach(function(link) {
+            link.remove();
+        });
+        const main = document.createElement('link');
+        main.rel = 'stylesheet';
+        main.media = 'screen';
+        main.href = themeStylesheetBase + name + '/theme.css';
+        main.setAttribute('data-dumpling-theme', name);
+        const mobile = document.createElement('link');
+        mobile.rel = 'stylesheet';
+        mobile.media = 'only screen and (max-width: 640px)';
+        mobile.href = themeStylesheetBase + name + '/theme-mobile.css';
+        mobile.setAttribute('data-dumpling-theme', name);
+        head.appendChild(main);
+        head.appendChild(mobile);
+    };
+
+    let currentThemeName = 'strawberry-milk';
+    Object.defineProperty(window.dumpling, 'theme', {
+        enumerable: true,
+        configurable: true,
+        get: function() { return currentThemeName; },
+        set: function(name) {
+            if (typeof name !== 'string' || !name) return;
+            currentThemeName = name;
+            applyThemeStylesheets(name);
+        }
+    });
+    // Load the default theme right away, so the page never flashes unstyled.
+    applyThemeStylesheets(currentThemeName);
+
     /* Set up the game when everything is loaded. */
     document.addEventListener('DOMContentLoaded', function() {
         // Compile additional situations from HTML
