@@ -274,9 +274,15 @@
     const animateWidth = function(element, toPx, ms, callback) {
         const from = getComputedStyle(element).width;
         const anim = element.animate(
-            [{width: from}, {width: toPx + 'px'}], {duration: ms}
+            [{width: from}, {width: toPx + 'px'}],
+            {duration: ms, fill: 'forwards'}
         );
-        if (callback) anim.onfinish = callback;
+        anim.onfinish = function() {
+            // Persist the final width; WAAPI reverts without this.
+            element.style.width = toPx + 'px';
+            anim.cancel();
+            if (callback) callback();
+        };
     };
 
     /* Animates an element's top offset (used for the mobile menu). */
