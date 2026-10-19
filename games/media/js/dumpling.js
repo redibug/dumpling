@@ -97,14 +97,33 @@
         return document.getElementById(id);
     };
 
+    /* True if the node can be used as a query context (jQuery is
+     * lenient about text nodes here, so are we). */
+    var isQueryable = function(node) {
+        return !!node && (node.nodeType === 1 ||
+                          node.nodeType === 9 ||
+                          node.nodeType === 11);
+    };
+
     /* querySelector(All) shorthands. qsa returns a real array. */
     var qs = function(selector, context) {
-        return (context || document).querySelector(selector);
+        var ctx = context || document;
+        if (!isQueryable(ctx)) return null;
+        return ctx.querySelector(selector);
     };
     var qsa = function(selector, context) {
-        return Array.prototype.slice.call(
-            (context || document).querySelectorAll(selector)
-        );
+        var ctx = context || document;
+        if (!isQueryable(ctx)) return [];
+        return Array.prototype.slice.call(ctx.querySelectorAll(selector));
+    };
+
+    /* Document-relative top of a node, like jQuery's .offset().top.
+     * Returns 0 for non-elements, matching jQuery's fallback. */
+    var docTop = function(node) {
+        if (node && typeof node.getBoundingClientRect === 'function') {
+            return node.getBoundingClientRect().top + window.scrollY;
+        }
+        return 0;
     };
 
     /* Like jQuery's .attr(): returns undefined (not null) when the
@@ -120,11 +139,35 @@
         return isNaN(h) ? 0 : h;
     };
 
-    /* Parses an HTML string into an array of nodes, like $(html). */
+    /* True for text nodes containing only whitespace. */
+    var isWhitespaceText = function(node) {
+        return node.nodeType === 3 && !(/[^\t\n\f\r ]/.test(node.nodeValue));
+    };
+
+    /* Parses an HTML string into an array of nodes, like $(html).
+     *
+     * jQuery's HTML regex trims leading and trailing whitespace
+     * before parsing, so a string like "\n  <h1>x</h1>\n  " parses to
+     * just the <h1>. We match that: leading and trailing
+     * whitespace-only text nodes are dropped. (This matters because
+     * Undum games in the wild, including the official tutorial,
+     * write content with leading whitespace, e.g. via .html().)
+     *
+     * Note: for exotic fragments jQuery also applies table-element
+     * wrapping (its "wrapMap"); we don't. Write <table> wrappers
+     * explicitly, as usual. */
     var parseHTML = function(html) {
         var template = document.createElement('template');
         template.innerHTML = html;
-        return Array.prototype.slice.call(template.content.childNodes);
+        var nodes = Array.prototype.slice.call(template.content.childNodes);
+        while (nodes.length > 0 && isWhitespaceText(nodes[0])) {
+            nodes.shift();
+        }
+        while (nodes.length > 0 &&
+               isWhitespaceText(nodes[nodes.length - 1])) {
+            nodes.pop();
+        }
+        return nodes;
     };
 
     /* Normalizes "Display Content" into an array of elements. Accepts
@@ -1539,12 +1582,10 @@
             scrollPoint = elHeight($id('content')) +
                 elHeight($id('title')) + 60;
         } else {
-            scrollPoint = nextel.getBoundingClientRect().top +
-                window.scrollY - window.innerHeight;
+            scrollPoint = docTop(nextel) - window.innerHeight;
         }
         if (output.length) {
-            var outputTop = output[0].getBoundingClientRect().top +
-                window.scrollY;
+            var outputTop = docTop(output[0]);
             if (scrollPoint > outputTop)
                 scrollPoint = outputTop;
         }
