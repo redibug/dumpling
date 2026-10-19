@@ -1563,7 +1563,7 @@
     };
 
 
-    /* Teletype experiment: new text is laid out invisibly first (so it
+    /* Teletype: new text is laid out invisibly first (so it
      * already takes up its space), then revealed with an opacity fade.
      * Units are single characters, except headings and list items which
      * reveal as whole blocks. Clicking anywhere finishes the reveal
@@ -2267,7 +2267,16 @@
         isInteractive: function() { return interactive; },
 
         // The dumpling set of translated strings.
-        language: {}
+        language: {},
+
+        /* Teletype: when true, new text is revealed character by character
+         * (layout reserved up front). */
+        teletype: true,
+        /* Milliseconds between each revealed character. 0 reveals
+         * everything instantly (no animation). */
+        teletypeTiming: 13,
+        /* Milliseconds for the opacity fade-in of each revealed unit. */
+        teletypeFading: 350
     };
     // Alias for backwards compatibility with Undum games and docs.
     window.undum = window.dumpling;
@@ -2321,15 +2330,6 @@
     });
     // Load the default theme right away, so the page never flashes unstyled.
     applyThemeStylesheets(currentThemeName);
-
-    /* Teletype experiment toggle. When true, new text is revealed
-     * character by character (layout reserved up front). */
-    window.dumpling.teletype = true;
-    /* Milliseconds between each revealed character. 0 reveals everything
-     * instantly (no animation). */
-    window.dumpling.teletypeTiming = 13;
-    /* Milliseconds for the opacity fade-in of each revealed unit. */
-    window.dumpling.teletypeFading = 350;
 
     /* Set up the game when everything is loaded. */
     document.addEventListener('DOMContentLoaded', function() {
