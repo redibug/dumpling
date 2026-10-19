@@ -2216,7 +2216,9 @@
     };
 
     /* Loads the game from the given data */
+    let wasLoaded = false;
     const loadGame = function(characterData) {
+        wasLoaded = true;
         progress = characterData;
 
         character = new Character();
@@ -2238,10 +2240,9 @@
             processLink(step.link);
         }
         interactive = true;
-        // Start at the newest situation, not the top of the log.
-        if (lastScrollPoint !== null && !mobile) {
-            window.scrollTo(0, lastScrollPoint);
-        }
+        // Note: we scroll to lastScrollPoint in the title click handler,
+        // once the content is visible. Scrolling here would clamp because
+        // #content_wrapper is still display:none.
 
         // Reverse engineer the start time.
         const now = new Date().getTime() * 0.001;
@@ -2388,6 +2389,10 @@
             });
             if (window.dumpling.teletype) {
                 teletypeStart(Array.from($id('content').childNodes));
+            }
+            // Jump to the first (fresh) or newest (loaded) situation.
+            if (lastScrollPoint !== null && !mobile) {
+                window.scrollTo(0, lastScrollPoint);
             }
             fadeIn($id("tools_wrapper"), 2000);
             $id("title").style.cursor = "default";
