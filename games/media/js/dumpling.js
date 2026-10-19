@@ -1643,7 +1643,9 @@
         document.addEventListener('click', teletypeFinish, true);
     };
 
-    const teletypeStart = function(nodes) {
+    /* Splits nodes into hidden char spans immediately, so the text
+     * takes up space but is invisible from the moment it is inserted. */
+    const teletypePrepare = function(nodes) {
         const chars = [];
         for (const node of nodes) {
             if (node.nodeType === Node.ELEMENT_NODE) {
@@ -1657,10 +1659,19 @@
                 chars.push(span);
             }
         }
+        return chars;
+    };
+
+    /* Begins revealing already-prepared chars. */
+    const teletypeBegin = function(chars) {
         if (!chars.length) return;
         if (!teletypeState) teletypeState = { chars: [], index: 0, timer: null };
         for (const span of chars) teletypeState.chars.push(span);
         teletypePump();
+    };
+
+    const teletypeStart = function(nodes) {
+        teletypeBegin(teletypePrepare(nodes));
     };
 
     /* Outputs regular content to the page. Used by write and
@@ -1680,10 +1691,13 @@
         }
         if (interactive && window.dumpling.teletype &&
             isVisible($id('content_wrapper'))) {
-            // Defer until scroll + vanish finish (kicked off in
-            // endOutputTransaction).
-            if (!teletypePendingNodes) teletypePendingNodes = [];
-            for (const node of output) teletypePendingNodes.push(node);
+            // Hide immediately (reserving layout); the reveal itself
+            // waits for scroll + vanish in endOutputTransaction.
+            const chars = teletypePrepare(output);
+            if (chars.length) {
+                if (!teletypePendingNodes) teletypePendingNodes = [];
+                for (const span of chars) teletypePendingNodes.push(span);
+            }
         }
         /* We want to scroll this new element to the bottom of the screen.
          * while still being visible. The easiest way is to find the
@@ -1870,9 +1884,9 @@
         }
         // Teletype waits for the scroll + vanish to finish first.
         if (teletypePendingNodes && teletypePendingNodes.length) {
-            const nodes = teletypePendingNodes;
+            const chars = teletypePendingNodes;
             teletypePendingNodes = null;
-            whenVanishDone(function() { teletypeStart(nodes); });
+            whenVanishDone(function() { teletypeBegin(chars); });
         }
     };
 
