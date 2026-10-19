@@ -1919,9 +1919,11 @@
             $id('content').appendChild(separator);
         }
     };
+    let lastScrollPoint = null;
     const endOutputTransaction = function() {
         let scrollPoint = scrollStack.pop();
         if (scrollStack.length === 0 && scrollPoint !== null) {
+            lastScrollPoint = scrollPoint;
             if (interactive && !mobile) {
                 smoothScrollTo(scrollPoint);
             }
@@ -2233,6 +2235,10 @@
             processLink(step.link);
         }
         interactive = true;
+        // Start at the newest situation, not the top of the log.
+        if (lastScrollPoint !== null && !mobile) {
+            window.scrollTo(0, lastScrollPoint);
+        }
 
         // Reverse engineer the start time.
         const now = new Date().getTime() * 0.001;
