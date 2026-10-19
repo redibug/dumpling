@@ -2156,8 +2156,9 @@
         if (localStorage[saveId]) {
             if (force || confirm("erase_message".l())) {
                 delete localStorage[saveId];
-                $id("erase").disabled = true;
-                startGame();
+                // Reload for a clean state; simpler than resetting
+                // everything in place.
+                location.reload();
             }
         }
     };
