@@ -251,6 +251,10 @@
             {duration: fadeMs, fill: 'forwards'}
         );
         fade.onfinish = function() {
+            // Hold the faded-out state as an inline style: cancelling
+            // the animation would otherwise drop its fill and the
+            // content would flash back to full opacity while shrinking.
+            element.style.opacity = '0';
             fade.cancel();
             element.style.overflow = 'hidden';
             const startHeight = element.scrollHeight;
