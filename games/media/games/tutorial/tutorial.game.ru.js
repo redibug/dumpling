@@ -5,14 +5,14 @@
 // dumpling.game.qualities, и dumpling.game.init.
 // ---------------------------------------------------------------------------
 
-/* Уникальный идентификатор вашей игры. Он никогда не отображается. 
- * Я использую UUID, но вы можеет использовать всё что гарантированно
- * уникально (URL, которым вы владеете, или вариацию вашего адреса 
- * e-mail, например).*/
 /* Pick a Dumpling theme. Built-in themes live in media/themes/:
  * "dumpling" (the default) and "undum" (the classic look). */
 dumpling.theme = "dumpling";
 
+/* Уникальный идентификатор вашей игры. Он никогда не отображается. 
+ * Я использую UUID, но вы можеет использовать всё что гарантированно
+ * уникально (URL, которым вы владеете, или вариацию вашего адреса 
+ * e-mail, например).*/
 dumpling.game.id = "349baf43-9ade-49a8-86d0-24e3de3ce042";
 
 /* A string indicating what version of the game this is. Versions are

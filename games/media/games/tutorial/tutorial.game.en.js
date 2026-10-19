@@ -4,13 +4,13 @@
 // dumpling.game.qualities, and dumpling.game.init.
 // ---------------------------------------------------------------------------
 
-/* A unique id for your game. This is never displayed. I use a UUID,
- * but you can use anything that is guaranteed unique (a URL you own,
- * or a variation on your email address, for example). */
 /* Pick a Dumpling theme. Built-in themes live in media/themes/:
  * "dumpling" (the default) and "undum" (the classic look). */
 dumpling.theme = "dumpling";
 
+/* A unique id for your game. This is never displayed. I use a UUID,
+ * but you can use anything that is guaranteed unique (a URL you own,
+ * or a variation on your email address, for example). */
 dumpling.game.id = "be1c95b9-cbc7-48c6-8e6a-89837aa9113e";
 
 /* A string indicating what version of the game this is. Versions are
