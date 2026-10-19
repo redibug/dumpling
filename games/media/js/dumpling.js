@@ -1605,7 +1605,7 @@
 
     /* Collects reveal units in document order. Headings and list items
      * become single units; everything else splits into characters. */
-    const teletypeCollect = function(node, units, ctx) {
+    const teletypeCollect = function(node, units) {
         // Idempotent: never double-wrap already-prepared units.
         if (node.nodeType === Node.ELEMENT_NODE &&
             node.classList.contains('tt-unit')) {
@@ -1618,10 +1618,6 @@
                 const span = document.createElement('span');
                 span.textContent = ch;
                 teletypeHide(span);
-                if (ctx && ctx.dropCap && ch.trim()) {
-                    span.classList.add('tt-dropcap');
-                    ctx.dropCap = false;
-                }
                 frag.appendChild(span);
                 units.push(span);
             }
@@ -1640,23 +1636,8 @@
                     teletypeHide(node);
                     units.push(node);
                 }
-                // Drop cap: paragraph directly after a heading (or after
-                // a heading+image) gets its first character marked.
-                let dropCap = false;
-                if (tag === 'P') {
-                    const prev = node.previousElementSibling;
-                    if (prev && /^H[1-6]$/.test(prev.tagName)) {
-                        dropCap = true;
-                    } else if (prev && prev.tagName === 'IMG') {
-                        const prev2 = prev.previousElementSibling;
-                        if (prev2 && /^H[1-6]$/.test(prev2.tagName)) {
-                            dropCap = true;
-                        }
-                    }
-                }
-                const childCtx = dropCap ? {dropCap: true} : null;
                 for (const child of Array.from(node.childNodes)) {
-                    teletypeCollect(child, units, childCtx);
+                    teletypeCollect(child, units);
                 }
             }
         }
@@ -1667,7 +1648,7 @@
     const teletypePrepare = function(nodes) {
         const units = [];
         for (const node of nodes) {
-            teletypeCollect(node, units, null);
+            teletypeCollect(node, units);
         }
         // Ensure a click can always rescue hidden units, even if the
         // reveal timer never starts.

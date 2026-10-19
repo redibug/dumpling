@@ -128,9 +128,7 @@ p + p, p + img + p, p + hr + p {
     color: rgba(0,0,0,0.85);
 }
 #content h1 + p:first-letter,
-#content h1 + img + p:first-letter,
-#content h1 + p .tt-dropcap,
-#content h1 + img + p .tt-dropcap {
+#content h1 + img + p:first-letter {
     position: relative;
     padding-top: 0.1em;
     display: block;
