@@ -194,7 +194,7 @@ h1:first-child {
     margin-top: 0;
 }
 a {
-    color: #a55f7a;
+    color: #dc588b;
     text-decoration: none;
     border-bottom: 1px solid transparent;
 }
@@ -203,7 +203,7 @@ a.raw {
     background: transparent url("../img/external_link.png") no-repeat right 4px;
 }
 a:hover {
-    color: #8c5069;
+    color: #ff5597;
     border-bottom: 1px dotted #8c5069;
     text-shadow: 0 0 10px rgba(165,95,122,0.55);
 }
