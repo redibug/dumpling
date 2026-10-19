@@ -1563,6 +1563,89 @@
     };
 
 
+    /* Teletype experiment: new text is laid out invisibly first (so it
+     * already takes up its space), then revealed character by character.
+     * Clicking anywhere finishes the reveal instantly.
+     */
+    let teletypeState = null;
+
+    const teletypeSplit = function(root) {
+        const chars = [];
+        const walker = document.createTreeWalker(
+            root, NodeFilter.SHOW_TEXT
+        );
+        const textNodes = [];
+        while (walker.nextNode()) {
+            const node = walker.currentNode;
+            const parent = node.parentElement;
+            if (parent &&
+                (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE')) {
+                continue;
+            }
+            if (node.nodeValue) textNodes.push(node);
+        }
+        for (const node of textNodes) {
+            const frag = document.createDocumentFragment();
+            for (const ch of node.nodeValue) {
+                const span = document.createElement('span');
+                span.className = 'tt-char';
+                span.style.visibility = 'hidden';
+                span.textContent = ch;
+                frag.appendChild(span);
+                chars.push(span);
+            }
+            node.replaceWith(frag);
+        }
+        return chars;
+    };
+
+    const teletypeFinish = function() {
+        if (!teletypeState) return;
+        if (teletypeState.timer) clearInterval(teletypeState.timer);
+        for (let i = teletypeState.index; i < teletypeState.chars.length; i++) {
+            teletypeState.chars[i].style.visibility = 'visible';
+        }
+        document.removeEventListener('click', teletypeFinish, true);
+        teletypeState = null;
+    };
+
+    const teletypePump = function() {
+        if (teletypeState && teletypeState.timer) return;
+        if (!teletypeState) teletypeState = { chars: [], index: 0, timer: null };
+        teletypeState.timer = setInterval(function() {
+            if (!teletypeState) return;
+            for (let i = 0; i < 3; i++) {
+                if (teletypeState.index >= teletypeState.chars.length) break;
+                teletypeState.chars[teletypeState.index++].style.visibility =
+                    'visible';
+            }
+            if (teletypeState.index >= teletypeState.chars.length) {
+                teletypeFinish();
+            }
+        }, 24);
+        document.addEventListener('click', teletypeFinish, true);
+    };
+
+    const teletypeStart = function(nodes) {
+        const chars = [];
+        for (const node of nodes) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                chars.push(...teletypeSplit(node));
+            } else if (node.nodeType === Node.TEXT_NODE && node.nodeValue) {
+                const span = document.createElement('span');
+                span.className = 'tt-char';
+                span.style.visibility = 'hidden';
+                span.textContent = node.nodeValue;
+                node.replaceWith(span);
+                chars.push(span);
+            }
+        }
+        if (!chars.length) return;
+        if (!teletypeState) teletypeState = { chars: [], index: 0, timer: null };
+        for (const span of chars) teletypeState.chars.push(span);
+        teletypePump();
+    };
+
     /* Outputs regular content to the page. Used by write and
      * writeBefore, the last two arguments control which DOM insertion
      * method is used to add the content.
@@ -1577,6 +1660,10 @@
         }
         else {
             insertNodes(element, appendMethod, output);
+        }
+        if (interactive && window.dumpling.teletype &&
+            isVisible($id('content_wrapper'))) {
+            teletypeStart(output);
         }
         /* We want to scroll this new element to the bottom of the screen.
          * while still being visible. The easiest way is to find the
@@ -2149,6 +2236,10 @@
     // Load the default theme right away, so the page never flashes unstyled.
     applyThemeStylesheets(currentThemeName);
 
+    /* Teletype experiment toggle. When true, new text is revealed
+     * character by character (layout reserved up front). */
+    window.dumpling.teletype = true;
+
     /* Set up the game when everything is loaded. */
     document.addEventListener('DOMContentLoaded', function() {
         // Compile additional situations from HTML
@@ -2193,6 +2284,9 @@
             qsa("#content_wrapper, #legal").forEach(function(element) {
                 fadeIn(element, 500);
             });
+            if (window.dumpling.teletype) {
+                teletypeStart(Array.from($id('content').childNodes));
+            }
             fadeIn($id("tools_wrapper"), 2000);
             $id("title").style.cursor = "default";
             qsa("#title .click_message").forEach(function(element) {
