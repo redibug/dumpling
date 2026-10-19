@@ -1658,6 +1658,13 @@
         return units;
     };
 
+    const teletypeUnwrap = function(el) {
+        // Merge character spans back into text; leave block units
+        // (headings, list items, images, lists) intact.
+        if (el.tagName === 'SPAN' && el.classList.contains('tt-unit')) {
+            el.replaceWith(document.createTextNode(el.textContent));
+        }
+    };
     const teletypeFinish = function() {
         if (teletypeState && teletypeState.timer) {
             clearInterval(teletypeState.timer);
@@ -1666,6 +1673,10 @@
         // orphaned (hidden but never queued) by an interrupted flow.
         const orphans = document.querySelectorAll('.tt-unit:not(.tt-on)');
         for (const el of orphans) teletypeShow(el);
+        // Clean up: unwrap character spans so they don't accumulate
+        // in the log as empty shells.
+        const allUnits = document.querySelectorAll('.tt-unit.tt-on');
+        for (const el of allUnits) teletypeUnwrap(el);
         document.removeEventListener('click', teletypeClickHandler, true);
         teletypeState = null;
         teletypePendingNodes = null;
