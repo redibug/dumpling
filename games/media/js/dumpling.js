@@ -1,10 +1,23 @@
 // ---------------------------------------------------------------------------
-// UNDUM game library. This file needs to be supplemented with a game
-// file (conventionally called "your-game-name.game.js" which will
-// define the content of the game.
+// DUMPLING game library.
+//
+// Dumpling is a fork of UNDUM (https://github.com/idmillington/undum)
+// by Ian Millington. The game API is unchanged, so Undum documentation
+// and tutorials still apply. The differences from upstream Undum:
+//
+//   * No jQuery dependency: the engine is pure modern vanilla
+//     JavaScript (DOM APIs + Web Animations API).
+//   * File renamed from undum.js to dumpling.js.
+//
+// This file needs to be supplemented with a game file (conventionally
+// called "your-game-name.game.js" which will define the content of the
+// game.
+//
+// Original Undum copyright (c) 2009-2010 Ian Millington, MIT License.
+// Dumpling modifications are also released under the MIT License.
 // ---------------------------------------------------------------------------
 
-(function($) {
+(function() {
     // -----------------------------------------------------------------------
     // Internal Infrastructure Implementations [NB: These have to be
     // at the top, because we use them below, but you can safely
@@ -57,7 +70,7 @@
     var isMobileDevice = function() {
         return (navigator.userAgent.toLowerCase().search(
             /iphone|ipad|palm|blackberry|android/
-        ) >= 0 || $("html").width() <= 640);
+        ) >= 0 || document.documentElement.clientWidth <= 640);
     };
 
     // Assertion
@@ -72,6 +85,167 @@
         if (!expression) {
             throw new AssertionError(message);
         }
+    };
+
+    // -----------------------------------------------------------------------
+    // Dumpling: vanilla DOM helpers (these replace jQuery)
+    // -----------------------------------------------------------------------
+
+    /* getElementById shorthand. Ids used by the engine are restricted
+     * to [a-z0-9-], so this is always safe. */
+    var $id = function(id) {
+        return document.getElementById(id);
+    };
+
+    /* querySelector(All) shorthands. qsa returns a real array. */
+    var qs = function(selector, context) {
+        return (context || document).querySelector(selector);
+    };
+    var qsa = function(selector, context) {
+        return Array.prototype.slice.call(
+            (context || document).querySelectorAll(selector)
+        );
+    };
+
+    /* Like jQuery's .attr(): returns undefined (not null) when the
+     * attribute is missing, so option handling is unchanged. */
+    var attr = function(element, name) {
+        var value = element.getAttribute(name);
+        return value === null ? undefined : value;
+    };
+
+    /* Content-box height of an element, like jQuery's .height(). */
+    var elHeight = function(element) {
+        var h = parseFloat(getComputedStyle(element).height);
+        return isNaN(h) ? 0 : h;
+    };
+
+    /* Parses an HTML string into an array of nodes, like $(html). */
+    var parseHTML = function(html) {
+        var template = document.createElement('template');
+        template.innerHTML = html;
+        return Array.prototype.slice.call(template.content.childNodes);
+    };
+
+    /* Normalizes "Display Content" into an array of elements. Accepts
+     * an HTML string, a single Element, or an array of Elements. */
+    var asElements = function(content) {
+        if (typeof content === 'string') return parseHTML(content);
+        if (content instanceof Element) return [content];
+        if (Array.isArray(content)) return content;
+        return [];
+    };
+
+    /* Inserts nodes into a target, matching jQuery's append/prepend/
+     * before/after/replaceWith. */
+    var insertNodes = function(target, method, nodes) {
+        switch (method) {
+        case 'append':
+            target.append.apply(target, nodes);
+            break;
+        case 'prepend':
+            target.prepend.apply(target, nodes);
+            break;
+        case 'before':
+            target.before.apply(target, nodes);
+            break;
+        case 'after':
+            target.after.apply(target, nodes);
+            break;
+        case 'replaceWith':
+            target.replaceWith.apply(target, nodes);
+            break;
+        }
+    };
+
+    /* jQuery's :visible check, close enough for our UI toggles. */
+    var isVisible = function(element) {
+        return getComputedStyle(element).display !== 'none';
+    };
+
+    /* Fade/slide helpers built on the Web Animations API, replacing
+     * jQuery's fadeIn/fadeOut/slideDown/slideUp/animate. */
+
+    var fadeIn = function(element, ms, callback) {
+        element.style.display = '';
+        var anim = element.animate(
+            [{opacity: 0}, {opacity: 1}], {duration: ms}
+        );
+        if (callback) anim.onfinish = callback;
+    };
+
+    var fadeOut = function(element, ms, callback) {
+        var anim = element.animate(
+            [{opacity: 1}, {opacity: 0}],
+            {duration: ms, fill: 'forwards'}
+        );
+        anim.onfinish = function() {
+            anim.cancel();
+            element.style.display = 'none';
+            if (callback) callback();
+        };
+    };
+
+    var slideDown = function(element, ms, callback) {
+        element.style.display = '';
+        element.style.overflow = 'hidden';
+        var targetHeight = element.scrollHeight;
+        var anim = element.animate(
+            [{height: '0px'}, {height: targetHeight + 'px'}],
+            {duration: ms, easing: 'ease'}
+        );
+        anim.onfinish = function() {
+            anim.cancel();
+            element.style.height = '';
+            element.style.overflow = '';
+            if (callback) callback();
+        };
+    };
+
+    /* Fades an element out, then collapses its height, then removes
+     * it. Matches jQuery's .animate({opacity:0}).slideUp(cb) chain. */
+    var fadeSlideUp = function(element, fadeMs, slideMs, callback) {
+        var fade = element.animate(
+            [{opacity: 1}, {opacity: 0}],
+            {duration: fadeMs, fill: 'forwards'}
+        );
+        fade.onfinish = function() {
+            fade.cancel();
+            element.style.overflow = 'hidden';
+            var startHeight = element.scrollHeight;
+            var slide = element.animate(
+                [{height: startHeight + 'px'}, {height: '0px'}],
+                {duration: slideMs, easing: 'ease'}
+            );
+            slide.onfinish = function() {
+                slide.cancel();
+                element.remove();
+                if (callback) callback();
+            };
+        };
+    };
+
+    /* Animates an element's width (used for quality progress bars). */
+    var animateWidth = function(element, toPx, ms, callback) {
+        var from = getComputedStyle(element).width;
+        var anim = element.animate(
+            [{width: from}, {width: toPx + 'px'}], {duration: ms}
+        );
+        if (callback) anim.onfinish = callback;
+    };
+
+    /* Animates an element's top offset (used for the mobile menu). */
+    var animateTop = function(element, toPx, ms) {
+        var from = getComputedStyle(element).top;
+        element.animate(
+            [{top: from}, {top: toPx + 'px'}],
+            {duration: ms, fill: 'forwards'}
+        );
+    };
+
+    /* Smooth scroll, replacing $("body, html").animate({scrollTop}). */
+    var smoothScrollTo = function(y) {
+        window.scrollTo({top: y, behavior: 'smooth'});
     };
 
     // -----------------------------------------------------------------------
@@ -174,7 +348,7 @@
             // (use the canView function to do context sensitive
             // manipulation).
             if (opts.tags !== undefined) {
-                if ($.isArray(opts.tags)) {
+                if (Array.isArray(opts.tags)) {
                     this.tags = opts.tags;
                 } else {
                     this.tags = opts.tags.split(/[ \t,]+/);
@@ -213,7 +387,7 @@
      * list of options generated automatically by the given
      * situation. */
     Situation.prototype.canView = function(character, system, situation) {
-        if ($.isFunction(this._canView)) {
+        if (typeof this._canView === 'function') {
             return this._canView(character, system, situation);
         } else {
             return this._canView;
@@ -222,7 +396,7 @@
     /* Determines whether this situation should be clickable within a
      * list of options generated automatically by the given situation. */
     Situation.prototype.canChoose = function(character, system, situation) {
-        if ($.isFunction(this._canChoose)) {
+        if (typeof this._canChoose === 'function') {
             return this._canChoose(character, system, situation);
         } else {
             return this._canChoose;
@@ -231,7 +405,7 @@
     /* Returns the text that should be used to display this situation
      * in an automatically generated list of choices. */
     Situation.prototype.optionText = function(character, system, situation) {
-        if ($.isFunction(this._optionText)) {
+        if (typeof this._optionText === 'function') {
             return this._optionText(character, system, situation);
         } else {
             return this._optionText;
@@ -304,7 +478,7 @@
     SimpleSituation.inherits(Situation);
     SimpleSituation.prototype.enter = function(character, system, from) {
         if (this.heading) {
-            if ($.isFunction(this.heading)) {
+            if (typeof this.heading === 'function') {
                 system.writeHeading(this.heading());
             } else {
                 system.writeHeading(this.heading);
@@ -312,7 +486,7 @@
         }
         if (this._enter) this._enter(character, system, from);
         if (this.content) {
-            if ($.isFunction(this.content)) {
+            if (typeof this.content === 'function') {
                 system.write(this.content());
             } else {
                 system.write(this.content);
@@ -374,7 +548,7 @@
      * values in different ways.
      */
     var QualityDefinition = function(title, opts) {
-        var myOpts = $.extend({
+        var myOpts = Object.assign({
             priority: title,
             group: null,
             extraClasses: null
@@ -455,7 +629,7 @@
      * Other options are the same as for QualityDefinition.
      */
     var WordScaleQuality = function(title, values, opts) {
-        var myOpts = $.extend({
+        var myOpts = Object.assign({
             offset: null,
             useBonuses: true
         }, opts);
@@ -505,7 +679,7 @@
      * object. Other options (in the opts parameter) are the same as
      * for QualityDefinition. */
     var OnOffQuality = function(title, opts) {
-        var myOpts = $.extend({
+        var myOpts = Object.assign({
             onDisplay: ""
         }, opts);
         QualityDefinition.call(this, title, opts);
@@ -526,7 +700,7 @@
      * default to 'yes' and 'no'.
      */
     var YesNoQuality = function(title, opts) {
-        var myOpts = $.extend({
+        var myOpts = Object.assign({
             yesDisplay: "yes".l(),
             noDisplay: "no".l()
         }, opts);
@@ -544,7 +718,7 @@
      * under the given optional title. These should be defined in the
      * `undum.game.qualityGroups` parameter. */
     var QualityGroup = function(title, opts) {
-        var myOpts = $.extend({
+        var myOpts = Object.assign({
             priority: title,
             extraClasses: null
         }, opts);
@@ -582,10 +756,10 @@
      * System.write.
      */
     System.prototype.clearContent = function(elementSelector) {
-        var $element;
-        if (elementSelector) $element = $(elementSelector);
-        if (!$element) $element = $("#content");
-        $element.empty();
+        var element = null;
+        if (elementSelector) element = qs(elementSelector);
+        if (!element) element = $id("content");
+        element.replaceChildren();
     };
 
     /* Outputs regular content to the page. The content supplied must
@@ -616,7 +790,8 @@
      * after the element that matches that selector.
      */
     System.prototype.writeHeading = function(headingContent, elementSelector) {
-        var heading = $("<h1>").html(headingContent);
+        var heading = document.createElement("h1");
+        heading.innerHTML = headingContent;
         doWrite(heading, elementSelector, 'append', 'after');
     };
 
@@ -673,9 +848,11 @@
      * is no longer available. It is used automatically when you give
      * a link the 'once' class. */
     System.prototype.clearLinks = function(code) {
-        $("a[href='" + code + "']").each(function(index, element) {
-            var a = $(element);
-            a.replaceWith($("<span>").addClass("ex_link").html(a.html()));
+        qsa("a[href='" + code + "']").forEach(function(a) {
+            var span = document.createElement("span");
+            span.className = "ex_link";
+            span.innerHTML = a.innerHTML;
+            a.replaceWith(span);
         });
     };
 
@@ -697,7 +874,8 @@
         if (listOfIds.length === 0) return;
 
         var currentSituation = getCurrentSituation();
-        var $options = $("<ul>").addClass("options");
+        var options = document.createElement("ul");
+        options.className = "options";
         for (var i = 0; i < listOfIds.length; ++i) {
             var situationId = listOfIds[i];
             var situation = game.situations[situationId];
@@ -710,18 +888,19 @@
             var optionText = situation.optionText(character, this,
                                                   currentSituation);
             if (!optionText) optionText = "choice".l({number:i+1});
-            var $option = $("<li>");
-            var $a;
+            var option = document.createElement("li");
+            var a;
             if (situation.canChoose(character, this, currentSituation)) {
-                $a = $("<a>").attr({href: situationId});
+                a = document.createElement("a");
+                a.setAttribute("href", situationId);
             } else {
-                $a = $("<span>");
+                a = document.createElement("span");
             }
-            $a.text(optionText);
-            $option.html($a);
-            $options.append($option);
+            a.textContent = optionText;
+            option.appendChild(a);
+            options.appendChild(option);
         }
-        doWrite($options, elementSelector, 'append', 'after');
+        doWrite(options, elementSelector, 'append', 'after');
     };
 
     /* Returns a list of situation ids to choose from, given a set of
@@ -785,7 +964,7 @@
         var i;
 
         // First check if we have a single string for the id or tag.
-        if ($.type(listOfOrOneIdsOrTags) == 'string') {
+        if (typeof listOfOrOneIdsOrTags === 'string') {
             listOfOrOneIdsOrTags = [listOfOrOneIdsOrTags];
         }
 
@@ -889,17 +1068,20 @@
      * `System.prototype.write` for the definition).
      */
     System.prototype.setCharacterText = function(content) {
-        var block = $("#character_text_content");
-        var oldContent = block.html();
+        var block = $id("character_text_content");
         var newContent = augmentLinks(content);
-        if (interactive && block.is(':visible')) {
-            block.fadeOut(250, function() {
-                block.html(newContent);
-                block.fadeIn(750);
+        var setContent = function() {
+            block.replaceChildren();
+            insertNodes(block, 'append', newContent);
+        };
+        if (interactive && isVisible(block)) {
+            fadeOut(block, 250, function() {
+                setContent();
+                fadeIn(block, 750);
             });
-            showHighlight($("#character_text"));
+            showHighlight($id("character_text"));
         } else {
-            block.html(newContent);
+            setContent();
         }
     };
 
@@ -923,10 +1105,11 @@
         }
 
         // Add the data block, if we need it.
-        var qualityBlock = $("#q_"+quality);
-        if (qualityBlock.length <= 0) {
+        var qualityBlock = $id("q_"+quality);
+        if (!qualityBlock) {
             if (newDisplay === null) return;
-            qualityBlock = addQualityBlock(quality).hide().fadeIn(500);
+            qualityBlock = addQualityBlock(quality);
+            fadeIn(qualityBlock, 500);
         } else {
             // Do nothing if there's nothing to do.
             if (oldValue == newValue) return;
@@ -936,21 +1119,21 @@
                 // Remove the block, and possibly the whole group, if
                 // it is the last quality in the group.
                 var toRemove = null;
-                var groupBlock = qualityBlock.parents('.quality_group');
-                if (groupBlock.find('.quality').length <= 1) {
+                var groupBlock = qualityBlock.closest('.quality_group');
+                if (qsa('.quality', groupBlock).length <= 1) {
                     toRemove = groupBlock;
                 } else {
                     toRemove = qualityBlock;
                 }
 
-                toRemove.fadeOut(1000, function() {
+                fadeOut(toRemove, 1000, function() {
                     toRemove.remove();
                 });
             } else {
-                var valBlock = qualityBlock.find("[data-attr='value']");
-                valBlock.fadeOut(250, function() {
-                    valBlock.html(newDisplay);
-                    valBlock.fadeIn(750);
+                var valBlock = qs("[data-attr='value']", qualityBlock);
+                fadeOut(valBlock, 250, function() {
+                    valBlock.innerHTML = newDisplay;
+                    fadeIn(valBlock, 750);
                 });
             }
         }
@@ -1014,7 +1197,7 @@
             myOpts.from = 1;
             myOpts.to = 0;
         }
-        $.extend(myOpts, opts);
+        Object.assign(myOpts, opts);
 
         // Run through the quality definition.
         var qualityDefinition = game.qualities[quality];
@@ -1034,56 +1217,55 @@
 
         // Create the animated bar.
         var totalWidth = 496;
-        var bar = $("#ui_library #progress_bar").clone();
-        bar.removeAttr("id");
-        var widthElement = bar.find("[data-attr='width']");
-        widthElement.css('width', myOpts.from*totalWidth);
+        var bar = qs("#ui_library #progress_bar").cloneNode(true);
+        bar.removeAttribute("id");
+        var widthElement = qs("[data-attr='width']", bar);
+        widthElement.style.width = (myOpts.from*totalWidth) + 'px';
 
         // Configure its labels
-        var titleLabel = bar.find("[data-attr='name']");
-        var valueLabel = bar.find("[data-attr='value']");
-        var leftLabel = bar.find("[data-attr='left_label']");
-        var rightLabel = bar.find("[data-attr='right_label']");
+        var titleLabel = qs("[data-attr='name']", bar);
+        var valueLabel = qs("[data-attr='value']", bar);
+        var leftLabel = qs("[data-attr='left_label']", bar);
+        var rightLabel = qs("[data-attr='right_label']", bar);
         if (myOpts.title) {
-            titleLabel.html(myOpts.title);
+            titleLabel.innerHTML = myOpts.title;
         } else {
             titleLabel.remove();
         }
         if (myOpts.showValue && myOpts.displayValue !== null) {
-            valueLabel.html(myOpts.displayValue);
+            valueLabel.innerHTML = myOpts.displayValue;
         } else {
             valueLabel.remove();
         }
         if (myOpts.leftLabel) {
-            leftLabel.html(myOpts.leftLabel);
+            leftLabel.innerHTML = myOpts.leftLabel;
         } else {
             leftLabel.remove();
         }
         if (myOpts.rightLabel) {
-            rightLabel.html(myOpts.rightLabel);
+            rightLabel.innerHTML = myOpts.rightLabel;
         } else {
             rightLabel.remove();
         }
-        $('#content').append(bar);
+        $id('content').appendChild(bar);
 
         // Start the animation
         var that = this;
         setTimeout(function() {
-            widthElement.animate(
-                {'width': myOpts.to*totalWidth}, that.options.progress_bar_speed,
-                function() {
+            animateWidth(widthElement, myOpts.to*totalWidth,
+                         that.options.progress_bar_speed,
+                         function() {
                     // After a moment to allow the bar to be read, we can
                     // remove it.
                     setTimeout(function() {
                         if (mobile) {
-                            bar.fadeOut(that.options.mobile_hide_speed, function() {
-                              $(this).remove();
-                            });
+                            fadeOut(bar, that.options.mobile_hide_speed,
+                                    function() {
+                                        bar.remove();
+                                    });
                         } else {
-                            bar.animate({opacity: 0}, that.options.fade_speed).
-                                slideUp(that.options.slide_up_speed, function() {
-                                    $(this).remove();
-                                });
+                            fadeSlideUp(bar, that.options.fade_speed,
+                                        that.options.slide_up_speed);
                         }
                     }, 2000);
                 }
@@ -1301,28 +1483,28 @@
     };
 
     var loadHTMLSituations = function() {
-        var $htmlSituations = $("div.situation");
-        $htmlSituations.each(function() {
-            var $situation = $(this);
-            var id = $situation.attr("id");
+        qsa("div.situation").forEach(function(situationElement) {
+            var id = attr(situationElement, "id");
             assert(game.situations[id] === undefined,
                    "existing_situation".l({id:id}));
 
-            var content = $situation.html();
+            var content = situationElement.innerHTML;
             var opts = {
                 // Situation content
-                optionText: $situation.attr("data-option-text"),
-                canView: parseFn($situation.attr("data-can-view")),
-                canChoose: parseFn($situation.attr("data-can-choose")),
-                priority: parse($situation.attr("data-priority")),
-                frequency: parse($situation.attr("data-frequency")),
-                displayOrder: parse($situation.attr("data-display-order")),
-                tags: parseList($situation.attr("data-tags"), false),
+                optionText: attr(situationElement, "data-option-text"),
+                canView: parseFn(attr(situationElement, "data-can-view")),
+                canChoose: parseFn(attr(situationElement, "data-can-choose")),
+                priority: parse(attr(situationElement, "data-priority")),
+                frequency: parse(attr(situationElement, "data-frequency")),
+                displayOrder: parse(attr(situationElement,
+                                         "data-display-order")),
+                tags: parseList(attr(situationElement, "data-tags"), false),
                 // Simple Situation content.
-                heading: $situation.attr("data-heading"),
-                choices: parseList($situation.attr("data-choices"), true),
-                minChoices: parse($situation.attr("data-min-choices")),
-                maxChoices: parse($situation.attr("data-max-choices"))
+                heading: attr(situationElement, "data-heading"),
+                choices: parseList(attr(situationElement, "data-choices"),
+                                   true),
+                minChoices: parse(attr(situationElement, "data-min-choices")),
+                maxChoices: parse(attr(situationElement, "data-max-choices"))
             };
 
             game.situations[id] = new SimpleSituation(content, opts);
@@ -1331,41 +1513,48 @@
 
 
     /* Outputs regular content to the page. Used by write and
-     * writeBefore, the last two arguments control what jQuery methods
-     * are used to add the content.
+     * writeBefore, the last two arguments control which DOM insertion
+     * method is used to add the content.
      */
     var doWrite = function(content, selector, addMethod, appendMethod) {
         continueOutputTransaction();
         var output = augmentLinks(content);
-        var element;
-        if (selector) element = $(selector);
+        var element = null;
+        if (selector) element = qs(selector);
         if (!element) {
-            $('#content')[addMethod](output);
+            insertNodes($id('content'), addMethod, output);
         }
         else {
-            element[appendMethod](output);
+            insertNodes(element, appendMethod, output);
         }
         /* We want to scroll this new element to the bottom of the screen.
          * while still being visible. The easiest way is to find the
          * top edge of the *following* element and move that exactly
          * to the bottom (while still ensuring that this element is fully
          * visible.) */
-        var nextel = output.last().next();
+        var lastOutput = output[output.length - 1];
+        var nextel = lastOutput ? lastOutput.nextElementSibling : null;
         var scrollPoint;
-        if (!nextel.length) {
-            scrollPoint = $("#content").height() + $("#title").height() + 60;
+        if (!nextel) {
+            scrollPoint = elHeight($id('content')) +
+                elHeight($id('title')) + 60;
         } else {
-            scrollPoint = nextel.offset().top - $(window).height();
+            scrollPoint = nextel.getBoundingClientRect().top +
+                window.scrollY - window.innerHeight;
         }
-        if (scrollPoint > output.offset().top)
-            scrollPoint = output.offset().top;
+        if (output.length) {
+            var outputTop = output[0].getBoundingClientRect().top +
+                window.scrollY;
+            if (scrollPoint > outputTop)
+                scrollPoint = outputTop;
+        }
         /* We add a fifth of the window height to this point, so that the
          * element won't be placed too close to the bottom edge of the
          * viewport. If we overshoot the viewport, we'll just go down to
          * the bottom - desirable behaviour anyway, especially if we are
          * already there. */
         scrollStack[scrollStack.length-1] =
-            (scrollPoint + ($(window).height() * 0.2));
+            (scrollPoint + (window.innerHeight * 0.2));
     };
 
     /* Gets the unique id used to identify saved games. */
@@ -1375,7 +1564,7 @@
 
     /* Adds the quality blocks to the character tools. */
     var showQualities = function() {
-        $("#qualities").empty();
+        $id("qualities").replaceChildren();
         for (var qualityId in character.qualities) {
             addQualityBlock(qualityId);
         }
@@ -1383,14 +1572,15 @@
 
     /* Fades in and out a highlight on the given element. */
     var showHighlight = function(domElement) {
-        var highlight = domElement.find(".highlight");
-        if (highlight.length <= 0) {
-            highlight = $('<div>').addClass('highlight');
-            domElement.append(highlight);
+        var highlight = qs(".highlight", domElement);
+        if (!highlight) {
+            highlight = document.createElement('div');
+            highlight.className = 'highlight';
+            domElement.appendChild(highlight);
         }
-        highlight.fadeIn(250);
+        fadeIn(highlight, 250);
         setTimeout(function() {
-            highlight.fadeOut(1000);
+            fadeOut(highlight, 1000);
         }, 2000);
     };
 
@@ -1399,16 +1589,16 @@
      * priority order, so all elements (existing and new) must have
      * their data-priority attribute set. */
     var insertAtCorrectPosition = function(parent, newItem) {
-        var newPriority = newItem.attr('data-priority');
-        var children = parent.children();
+        var newPriority = newItem.getAttribute('data-priority');
+        var children = parent.children;
         for (var i = 0; i < children.length; i++) {
-            var child = children.eq(i);
-            if (newPriority < child.attr('data-priority')) {
+            var child = children[i];
+            if (newPriority < child.getAttribute('data-priority')) {
                 child.before(newItem);
                 return;
             }
         }
-        parent.append(newItem);
+        parent.appendChild(newItem);
     };
 
     /* Adds a new group to the correct location in the quality list. */
@@ -1416,25 +1606,25 @@
         var groupDefinition = game.qualityGroups[groupId];
 
         // Build the group div with appropriate heading.
-        var groupBlock = $("#ui_library #quality_group").clone();
-        groupBlock.attr("id", "g_"+groupId);
-        groupBlock.attr("data-priority", groupDefinition.priority);
+        var groupBlock = qs("#ui_library #quality_group").cloneNode(true);
+        groupBlock.setAttribute("id", "g_"+groupId);
+        groupBlock.setAttribute("data-priority", groupDefinition.priority);
 
-        var titleElement = groupBlock.find("[data-attr='title']");
+        var titleElement = qs("[data-attr='title']", groupBlock);
         if (groupDefinition.title) {
-            titleElement.html(groupDefinition.title);
+            titleElement.innerHTML = groupDefinition.title;
         } else {
             titleElement.remove();
         }
 
         if (groupDefinition.extraClasses) {
             for (var i = 0; i < groupDefinition.extraClasses.length; i++) {
-                groupBlock.addClass(groupDefinition.extraClasses[i]);
+                groupBlock.classList.add(groupDefinition.extraClasses[i]);
             }
         }
 
         // Add the block to the correct place.
-        var qualities = $("#qualities");
+        var qualities = $id("qualities");
         insertAtCorrectPosition(qualities, groupBlock);
         return groupBlock;
     };
@@ -1456,14 +1646,14 @@
         if (val === null) return null;
 
         // Create the quality output.
-        var qualityBlock = $("#ui_library #quality").clone();
-        qualityBlock.attr("id", "q_"+qualityId);
-        qualityBlock.attr("data-priority", qualityDefinition.priority);
-        qualityBlock.find("[data-attr='name']").html(name);
-        qualityBlock.find("[data-attr='value']").html(val);
+        var qualityBlock = qs("#ui_library #quality").cloneNode(true);
+        qualityBlock.setAttribute("id", "q_"+qualityId);
+        qualityBlock.setAttribute("data-priority", qualityDefinition.priority);
+        qs("[data-attr='name']", qualityBlock).innerHTML = name;
+        qs("[data-attr='value']", qualityBlock).innerHTML = val;
         if (qualityDefinition.extraClasses) {
             for (var i = 0; i < qualityDefinition.extraClasses.length; i++) {
-                qualityBlock.addClass(qualityDefinition.extraClasses[i]);
+                qualityBlock.classList.add(qualityDefinition.extraClasses[i]);
             }
         }
 
@@ -1473,14 +1663,14 @@
         if (groupId) {
             var group = game.qualityGroups[groupId];
             assert(group, "no_group_definition".l({id: groupId}));
-            groupBlock = $("#g_"+groupId);
-            if (groupBlock.length <= 0) {
+            groupBlock = $id("g_"+groupId);
+            if (!groupBlock) {
                 groupBlock = addGroupBlock(groupId);
             }
         }
 
         // Position it correctly.
-        var groupQualityList = groupBlock.find(".qualities_in_group");
+        var groupQualityList = qs(".qualities_in_group", groupBlock);
         insertAtCorrectPosition(groupQualityList, qualityBlock);
         return qualityBlock;
     };
@@ -1503,22 +1693,22 @@
         }
         // The default is "all the way down".
         scrollStack.push(
-            $("#content").height() + $("#title").height() + 60
+            elHeight($id('content')) + elHeight($id('title')) + 60
         );
     };
     var continueOutputTransaction = function() {
         if (pendingFirstWrite) {
             pendingFirstWrite = false;
-            var separator = $("#ui_library #turn_separator").clone();
-            separator.removeAttr("id");
-            $("#content").append(separator);
+            var separator = qs("#ui_library #turn_separator").cloneNode(true);
+            separator.removeAttribute("id");
+            $id('content').appendChild(separator);
         }
     };
     var endOutputTransaction = function() {
         var scrollPoint = scrollStack.pop();
         if (scrollStack.length === 0 && scrollPoint !== null) {
             if (interactive && !mobile) {
-                $("body, html").animate({scrollTop: scrollPoint}, 500);
+                smoothScrollTo(scrollPoint);
             }
             scrollPoint = null;
         }
@@ -1555,7 +1745,7 @@
         endOutputTransaction();
 
         // We're able to save, if we weren't already.
-        $("#save").attr('disabled', false);
+        $id("save").disabled = false;
     };
 
     /* This gets called to actually do the work of processing a code.
@@ -1631,30 +1821,41 @@
                 game.exit(character, system, oldSituationId, newSituationId);
             }
 
-            var contentToHide = $('#content .transient, #content ul.options');
-            contentToHide.add($("#content a").filter(function(){
-                return $(this).attr("href").match(/[?&]transient[=&]?/);
-            }));
+            var contentToHide = qsa('#content .transient, #content ul.options');
+            qsa("#content a").forEach(function(link) {
+                var href = link.getAttribute("href");
+                if (href && href.match(/[?&]transient[=&]?/)) {
+                    contentToHide.push(link);
+                }
+            });
             if (interactive) {
                 if (mobile) {
-                  contentToHide.fadeOut(system.options.mobile_hide_speed);
+                    contentToHide.forEach(function(element) {
+                        fadeOut(element, system.options.mobile_hide_speed);
+                    });
                 } else {
-				        // Get fate out speed of options, and slide up speed variables.
-                  contentToHide.
-                    animate({opacity: 0}, system.options.fade_speed).
-                    slideUp(system.options.slide_up_speed, function() {
-                      $(this).remove();
+                    // Get fade out speed of options, and slide up speed
+                    // variables.
+                    contentToHide.forEach(function(element) {
+                        fadeSlideUp(element, system.options.fade_speed,
+                                    system.options.slide_up_speed);
                     });
                 }
             } else {
-                contentToHide.remove();
+                contentToHide.forEach(function(element) {
+                    element.remove();
+                });
             }
             //  Remove links and transient sections.
-            $('#content a').each(function(index, element) {
-                var a = $(element);
-                if (a.hasClass('sticky') || a.attr("href").match(/[?&]sticky[=&]?/))
+            qsa('#content a').forEach(function(a) {
+                var href = a.getAttribute("href");
+                if (a.classList.contains('sticky') ||
+                    (href && href.match(/[?&]sticky[=&]?/)))
                     return;
-                a.replaceWith($("<span>").addClass("ex_link").html(a.html()));
+                var span = document.createElement("span");
+                span.className = "ex_link";
+                span.innerHTML = a.innerHTML;
+                a.replaceWith(span);
             });
         }
 
@@ -1676,32 +1877,35 @@
     /* Returns HTML from the given content with the non-raw links
      * wired up. */
     var augmentLinks = function(content) {
-        var output = $(content);
+        var output = asElements(content);
 
         // Wire up the links for regular <a> tags.
-        output.find("a").each(function(index, element) {
-            var a = $(element);
-            var href = a.attr('href');
-            if (!a.hasClass("raw")|| href.match(/[?&]raw[=&]?/)) {
-                if (href.match(linkRe)) {
-                    a.click(function(event) {
-                        event.preventDefault();
+        output.forEach(function(topElement) {
+            qsa("a", topElement).forEach(function(a) {
+                var href = a.getAttribute('href');
+                if (!a.classList.contains("raw") ||
+                    (href && href.match(/[?&]raw[=&]?/))) {
+                    if (href && href.match(linkRe)) {
+                        a.addEventListener('click', function(event) {
+                            event.preventDefault();
 
-                        // If we're a once-click, remove all matching
-                        // links.
-                        if (system.options.all_links_once === false
-                          || (system.options.all_links_once === true
-                          && (a.hasClass("once") || href.match(/[?&]once[=&]?/)))) {
-                          system.clearLinks(href);
-                        }
+                            // If we're a once-click, remove all matching
+                            // links.
+                            if (system.options.all_links_once === false
+                                || (system.options.all_links_once === true
+                                    && (a.classList.contains("once") ||
+                                        href.match(/[?&]once[=&]?/)))) {
+                                system.clearLinks(href);
+                            }
 
-                        processClick(href);
-                        return false;
-                    });
-                } else {
-                    a.addClass("raw");
+                            processClick(href);
+                            return false;
+                        });
+                    } else {
+                        a.classList.add("raw");
+                    }
                 }
-            }
+            });
         });
 
         return output;
@@ -1713,7 +1917,7 @@
         if (localStorage[saveId]) {
             if (force || confirm("erase_message".l())) {
                 delete localStorage[saveId];
-                $("#erase").attr('disabled', true);
+                $id("erase").disabled = true;
                 startGame();
             }
         }
@@ -1739,7 +1943,7 @@
      * state. */
     var initGameDisplay = function() {
         // Transition into the first situation,
-        $("#content").empty();
+        $id("content").replaceChildren();
 
         var situation = getCurrentSituation();
         assert(situation, "no_current_situation".l());
@@ -1756,7 +1960,7 @@
         progress.sequence = [{link:game.start, when:0}];
 
         // Empty the display
-        $("#content").empty();
+        $id("content").replaceChildren();
 
         // Start the game
         startTime = new Date().getTime() * 0.001;
@@ -1779,8 +1983,8 @@
         localStorage[getSaveId()] = JSON.stringify(progress);
 
         // Switch the button highlights.
-        $("#erase").attr('disabled', false);
-        $("#save").attr('disabled', true);
+        $id("erase").disabled = false;
+        $id("save").disabled = true;
     };
 
     /* Loads the game from the given data */
@@ -1791,7 +1995,7 @@
         system.rnd = new Random(progress.seed);
 
         // Empty the display
-        $("#content").empty();
+        $id("content").replaceChildren();
         showQualities();
 
         // Now play through the actions so far:
@@ -1845,59 +2049,69 @@
     };
 
     /* Set up the game when everything is loaded. */
-    $(function() {
+    document.addEventListener('DOMContentLoaded', function() {
         // Compile additional situations from HTML
         loadHTMLSituations();
 
         // Handle storage.
         if (hasLocalStorage()) {
-            var erase = $("#erase").click(function() {
+            var erase = $id("erase");
+            erase.addEventListener('click', function() {
                 doErase();
             });
-            var save = $("#save").click(saveGame);
+            var save = $id("save");
+            save.addEventListener('click', saveGame);
 
             var storedCharacter = localStorage[getSaveId()];
             if (storedCharacter) {
                 try {
                     loadGame(JSON.parse(storedCharacter));
-                    save.attr('disabled', true);
-                    erase.attr("disabled", false);
+                    save.disabled = true;
+                    erase.disabled = false;
                 } catch(err) {
                     doErase(true);
                 }
             } else {
-                save.attr('disabled', true);
-                erase.attr("disabled", true);
+                save.disabled = true;
+                erase.disabled = true;
                 startGame();
             }
         } else {
-            $(".buttons").html("<p>"+"no_local_storage".l()+"</p>");
+            qs(".buttons").innerHTML = "<p>"+"no_local_storage".l()+"</p>";
             startGame();
         }
 
         // Display the "click to begin" message. (We do this in code
         // so that, if Javascript is off, it doesn't happen.)
-        $(".click_message").show();
+        qsa(".click_message").forEach(function(element) {
+            element.style.display = '';
+        });
 
         // Show the game when we click on the title.
-        $("#title").one('click', function() {
-            $("#content_wrapper, #legal").fadeIn(500);
-            $("#tools_wrapper").fadeIn(2000);
-            $("#title").css("cursor", "default");
-            $("#title .click_message").fadeOut(250);
+        $id("title").addEventListener('click', function() {
+            qsa("#content_wrapper, #legal").forEach(function(element) {
+                fadeIn(element, 500);
+            });
+            fadeIn($id("tools_wrapper"), 2000);
+            $id("title").style.cursor = "default";
+            qsa("#title .click_message").forEach(function(element) {
+                fadeOut(element, 250);
+            });
             if (mobile) {
-                $("#toolbar").slideDown(500);
-                $("#menu").show();
+                slideDown($id("toolbar"), 500);
+                $id("menu").style.display = '';
             }
-        });
+        }, {once: true});
 
         // Any point that an option list appears, its options are its
         // first links.
-        $("body").on('click', "ul.options li, #menu li", function(event) {
+        document.body.addEventListener('click', function(event) {
             // Make option clicks pass through to their first link.
-            var link = $("a", this);
-            if (link.length > 0) {
-                $(link.get(0)).click();
+            var item = event.target.closest("ul.options li, #menu li");
+            if (!item) return;
+            var link = qs("a", item);
+            if (link) {
+                link.click();
             }
         });
 
@@ -1908,31 +2122,39 @@
             mobile = isMobileDevice();
 
             if (wasMobile != mobile) {
-                var showing = !$(".click_message").is(":visible");
+                var showing = !isVisible(qs(".click_message"));
                 if (mobile) {
-                    var menu = $("#menu");
+                    var menu = $id("menu");
                     if (showing) {
-                        $("#toolbar").show();
-                        menu.show();
+                        $id("toolbar").style.display = '';
+                        menu.style.display = '';
                     }
-                    menu.css('top', -menu.height()-52);
+                    menu.style.top = (-elHeight(menu)-52) + 'px';
                     // Go to the story view.
-                    $("#character_panel, #info_panel").hide();
+                    qsa("#character_panel, #info_panel").forEach(
+                        function(element) {
+                            element.style.display = 'none';
+                        }
+                    );
                 } else {
                     // Use the full width version
-                    $("#toolbar").hide();
-                    $("#menu").hide();
+                    $id("toolbar").style.display = 'none';
+                    $id("menu").style.display = 'none';
                     if (showing) {
                         // Display the side bars
-                        $("#tools_wrapper").show();
+                        $id("tools_wrapper").style.display = '';
                     }
-                    $("#character_panel, #info_panel").show();
+                    qsa("#character_panel, #info_panel").forEach(
+                        function(element) {
+                            element.style.display = '';
+                        }
+                    );
                 }
-                $("#title").show();
-                if (showing) $("#content_wrapper").show();
+                $id("title").style.display = '';
+                if (showing) $id("content_wrapper").style.display = '';
             }
         };
-        $(window).bind('resize', resize);
+        window.addEventListener('resize', resize);
         resize();
 
         // Handle display of the menu and resizing: used on mobile
@@ -1941,21 +2163,21 @@
     });
 
     var initMenu = function() {
-        var menu = $("#menu");
+        var menu = $id("menu");
 
         var menuVisible = false;
         var open = function() {
-            menu.animate({top:48}, 500);
+            animateTop(menu, 48, 500);
             menuVisible = true;
         };
         var close = function() {
-            menu.animate({top:-menu.height()-52}, 250);
+            animateTop(menu, -elHeight(menu)-52, 250);
             menuVisible = false;
         };
-        menu.css('top', -menu.height()-52);
+        menu.style.top = (-elHeight(menu)-52) + 'px';
 
         // Slide up and down on clicks from the main button.
-        $("#menu-button").click(function(event) {
+        $id("menu-button").addEventListener('click', function(event) {
             event.preventDefault();
             event.stopPropagation();
             if (menuVisible) {
@@ -1968,23 +2190,27 @@
 
         // Register for clicks on the individual menu items: show the
         // relevant item.
-        $("#menu a").click(function(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            var target = $($(this).attr('href'));
-            if (!target.is(":visible")) {
-                // Fade out those we don't want.
-                $("#menu a").each(function() {
-                    var href = $(this).attr('href');
-                    if (href != target) {
-                        $(href).fadeOut(250);
-                    }
-                });
-                // Fade in our target
-                setTimeout(function() { target.fadeIn(500); }, 250);
-            }
-            close();
-            return false;
+        qsa("#menu a").forEach(function(menuLink) {
+            menuLink.addEventListener('click', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                var target = qs(menuLink.getAttribute('href'));
+                if (target && !isVisible(target)) {
+                    // Fade out those we don't want. (Note: the
+                    // original faded out every panel, including the
+                    // target, before fading the target back in. We
+                    // keep that behavior.)
+                    qsa("#menu a").forEach(function(otherLink) {
+                        var otherTarget =
+                            qs(otherLink.getAttribute('href'));
+                        if (otherTarget) fadeOut(otherTarget, 250);
+                    });
+                    // Fade in our target
+                    setTimeout(function() { fadeIn(target, 500); }, 250);
+                }
+                close();
+                return false;
+            });
         });
     };
 
@@ -2035,7 +2261,7 @@
         // API
         String.prototype.l = function(args) {
             // Get lang attribute from html tag.
-            var lang = $("html").attr("lang") || "";
+            var lang = document.documentElement.getAttribute("lang") || "";
 
             // Find the localized form.
             var localized = localize(lang, this);
@@ -2288,4 +2514,4 @@
     // preferred language.
     undum.language[""] = en;
     undum.language["en"] = en;
-}(jQuery));
+}());

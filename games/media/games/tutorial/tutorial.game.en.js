@@ -56,7 +56,7 @@ undum.game.situations = {
     // more sense than writing it longhand.
     situations: new undum.Situation({
         enter: function(character, system, from) {
-            system.write($("#s_situations").html());
+            system.write(document.getElementById("s_situations").innerHTML);
         },
         tags: ["topic"],
         optionText: "What Undum Games are Made Of",
@@ -339,7 +339,7 @@ undum.game.situations = {
     // Again, we'll retrieve the text we want from the HTML file.
     "saving": new undum.Situation({
         enter: function(character, system, from) {
-            system.write($("#s_saving").html());
+            system.write(document.getElementById("s_saving").innerHTML);
         },
         tags: ["topic"],
         displayOrder: 6,

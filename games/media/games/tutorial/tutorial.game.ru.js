@@ -59,7 +59,7 @@ undum.game.situations = {
     // Для статичного текста в этом больше смысла, чем записывать его просто так.
     situations: new undum.Situation({
         enter: function(character, system, from) {
-            system.write($("#s_situations").html());
+            system.write(document.getElementById("s_situations").innerHTML);
         },
         tags: ["topic"],
         optionText: "situations_title".l(),
@@ -318,7 +318,7 @@ undum.game.situations = {
     // Опять, мы получаем текст из HTML файла.
     "saving": new undum.Situation({
         enter: function(character, system, from) {
-            system.write($("#s_saving").html());
+            system.write(document.getElementById("s_saving").innerHTML);
         },
         tags: ["topic"],
         displayOrder: 6,

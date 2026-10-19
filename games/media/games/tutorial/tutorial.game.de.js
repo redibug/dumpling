@@ -45,7 +45,7 @@ undum.game.situations = {
     // sinnvoller als ihn hier komplett auszuschreiben.
     rooms: new undum.Situation({
         enter: function(character, system, from) {
-            system.write($("#s_rooms").html());
+            system.write(document.getElementById("s_rooms").innerHTML);
         }
     }),
     todo: new undum.SimpleSituation(
@@ -370,7 +370,7 @@ undum.game.situations = {
     // An dieser Stelle ziehen wir den gewuenschten Text wieder aus der HTML-Datei.
     "saving": new undum.Situation({
         enter: function(character, system, from) {
-            system.write($("#s_saving").html());
+            system.write(document.getElementById("s_saving").innerHTML);
         }
     }),
     "last": new undum.SimpleSituation(
