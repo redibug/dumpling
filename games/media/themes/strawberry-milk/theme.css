@@ -272,7 +272,7 @@ img.float_left {
     background: linear-gradient(to bottom, #ff8fb5, #f76b9c);
     color: #fff;
     border: none;
-    padding: 0.4em 1.4em;
+    padding: 0.2em 1.0em;
     cursor: pointer;
     border-radius: 999px;
     -webkit-box-shadow: 0 2px 8px rgba(214,51,108,0.35);
