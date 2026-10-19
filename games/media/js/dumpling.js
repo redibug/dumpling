@@ -2047,7 +2047,7 @@
     // -----------------------------------------------------------------------
 
     /* Export our API. */
-    window.undum = {
+    window.dumpling = {
         Situation: Situation,
         SimpleSituation: SimpleSituation,
 
@@ -2066,9 +2066,11 @@
 
         isInteractive: function() { return interactive; },
 
-        // The undum set of translated strings.
+        // The dumpling set of translated strings.
         language: {}
     };
+    // Alias for backwards compatibility with Undum games and docs.
+    window.undum = window.dumpling;
 
     /* Set up the game when everything is loaded. */
     document.addEventListener('DOMContentLoaded', function() {
@@ -2250,13 +2252,13 @@
             if (codeArray) return codeArray;
 
             codeArray = [];
-            if (languageCode in undum.language) {
+            if (languageCode in dumpling.language) {
                 codeArray.push(languageCode);
             }
             const elements = languageCode.split('-');
             for (let i = elements.length-2; i > 0; i--) {
                 const thisCode = elements.slice(0, i).join('-');
-                if (thisCode in undum.language) {
+                if (thisCode in dumpling.language) {
                     codeArray.push(thisCode);
                 }
             }
@@ -2265,7 +2267,7 @@
             return codeArray;
         };
         const lookup = function(languageCode, message) {
-            const languageData = undum.language[languageCode];
+            const languageData = dumpling.language[languageCode];
             if (!languageData) return null;
             return languageData[message];
         };
@@ -2539,6 +2541,6 @@
     };
     // Set this data as both the default fallback language, and the english
     // preferred language.
-    undum.language[""] = en;
-    undum.language["en"] = en;
+    dumpling.language[""] = en;
+    dumpling.language["en"] = en;
 }());
