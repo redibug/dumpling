@@ -1564,8 +1564,11 @@
 
 
     /* Teletype experiment: new text is laid out invisibly first (so it
-     * already takes up its space), then revealed character by character.
-     * Clicking anywhere finishes the reveal instantly.
+     * already takes up its space), then revealed with an opacity fade.
+     * Units are single characters, except headings and list items which
+     * reveal as whole blocks. Clicking anywhere finishes the reveal
+     * instantly; clicks on unrevealed links are swallowed (they just
+     * reveal instead of navigating).
      */
     let teletypeState = null;
     let teletypePendingNodes = null;
@@ -1586,44 +1589,80 @@
         else vanishWaiters.push(cb);
     };
 
-    const teletypeSplit = function(root) {
-        const chars = [];
-        const walker = document.createTreeWalker(
-            root, NodeFilter.SHOW_TEXT
-        );
-        const textNodes = [];
-        while (walker.nextNode()) {
-            const node = walker.currentNode;
-            const parent = node.parentElement;
-            if (parent &&
-                (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE')) {
-                continue;
-            }
-            if (node.nodeValue) textNodes.push(node);
-        }
-        for (const node of textNodes) {
+    const TT_HIDDEN = 'opacity:0;transition:opacity 0.35s ease;pointer-events:none;';
+    const TT_SHOWN = 'opacity:1;pointer-events:auto;';
+
+    const teletypeHide = function(el) {
+        el.classList.add('tt-unit');
+        el.style.cssText += TT_HIDDEN;
+    };
+    const teletypeShow = function(el) {
+        el.classList.add('tt-on');
+        el.style.cssText += TT_SHOWN;
+    };
+
+    /* Collects reveal units in document order. Headings and list items
+     * become single units; everything else splits into characters. */
+    const teletypeCollect = function(node, units) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            if (!node.nodeValue) return;
             const frag = document.createDocumentFragment();
             for (const ch of node.nodeValue) {
                 const span = document.createElement('span');
-                span.className = 'tt-char';
-                span.style.visibility = 'hidden';
                 span.textContent = ch;
+                teletypeHide(span);
                 frag.appendChild(span);
-                chars.push(span);
+                units.push(span);
             }
             node.replaceWith(frag);
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            const tag = node.tagName;
+            if (tag === 'SCRIPT' || tag === 'STYLE') return;
+            if (/^H[1-6]$/.test(tag) || tag === 'LI') {
+                teletypeHide(node);
+                units.push(node);
+            } else {
+                for (const child of Array.from(node.childNodes)) {
+                    teletypeCollect(child, units);
+                }
+            }
         }
-        return chars;
+    };
+
+    /* Splits nodes into hidden units immediately, so the text takes up
+     * space but is invisible from the moment it is inserted. */
+    const teletypePrepare = function(nodes) {
+        const units = [];
+        for (const node of nodes) {
+            teletypeCollect(node, units);
+        }
+        return units;
     };
 
     const teletypeFinish = function() {
         if (!teletypeState) return;
         if (teletypeState.timer) clearInterval(teletypeState.timer);
         for (let i = teletypeState.index; i < teletypeState.chars.length; i++) {
-            teletypeState.chars[i].style.visibility = 'visible';
+            teletypeShow(teletypeState.chars[i]);
         }
-        document.removeEventListener('click', teletypeFinish, true);
+        document.removeEventListener('click', teletypeClickHandler, true);
         teletypeState = null;
+    };
+
+    const teletypeClickHandler = function(event) {
+        if (!teletypeState) return;
+        // Swallow clicks on links that aren't fully revealed yet.
+        let block = false;
+        const t = event.target;
+        const link = t && t.closest ? t.closest('a[href]') : null;
+        if (link && link.querySelector('.tt-unit:not(.tt-on)')) {
+            block = true;
+        }
+        teletypeFinish();
+        if (block) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
     };
 
     const teletypePump = function() {
@@ -1631,42 +1670,27 @@
         if (!teletypeState) teletypeState = { chars: [], index: 0, timer: null };
         teletypeState.timer = setInterval(function() {
             if (!teletypeState) return;
-            for (let i = 0; i < 3; i++) {
-                if (teletypeState.index >= teletypeState.chars.length) break;
-                teletypeState.chars[teletypeState.index++].style.visibility =
-                    'visible';
+            // Reveal a couple of chars, or one whole block unit, per tick.
+            let n = 0;
+            while (n < 3 && teletypeState.index < teletypeState.chars.length) {
+                const unit = teletypeState.chars[teletypeState.index++];
+                teletypeShow(unit);
+                n++;
+                // Block units (headings, list items) get their own tick.
+                if (unit.tagName && /^(H[1-6]|LI)$/.test(unit.tagName)) break;
             }
             if (teletypeState.index >= teletypeState.chars.length) {
                 teletypeFinish();
             }
-        }, 24);
-        document.addEventListener('click', teletypeFinish, true);
+        }, 40);
+        document.addEventListener('click', teletypeClickHandler, true);
     };
 
-    /* Splits nodes into hidden char spans immediately, so the text
-     * takes up space but is invisible from the moment it is inserted. */
-    const teletypePrepare = function(nodes) {
-        const chars = [];
-        for (const node of nodes) {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-                chars.push(...teletypeSplit(node));
-            } else if (node.nodeType === Node.TEXT_NODE && node.nodeValue) {
-                const span = document.createElement('span');
-                span.className = 'tt-char';
-                span.style.visibility = 'hidden';
-                span.textContent = node.nodeValue;
-                node.replaceWith(span);
-                chars.push(span);
-            }
-        }
-        return chars;
-    };
-
-    /* Begins revealing already-prepared chars. */
-    const teletypeBegin = function(chars) {
-        if (!chars.length) return;
+    /* Begins revealing already-prepared units. */
+    const teletypeBegin = function(units) {
+        if (!units.length) return;
         if (!teletypeState) teletypeState = { chars: [], index: 0, timer: null };
-        for (const span of chars) teletypeState.chars.push(span);
+        for (const unit of units) teletypeState.chars.push(unit);
         teletypePump();
     };
 
