@@ -1689,21 +1689,20 @@
     const teletypePump = function() {
         if (teletypeState && teletypeState.timer) return;
         if (!teletypeState) teletypeState = { chars: [], index: 0, timer: null };
+        const timing = window.dumpling.teletypeTiming;
+        if (!timing || timing <= 0) {
+            // Instant: reveal everything without animating.
+            teletypeFinish();
+            return;
+        }
         teletypeState.timer = setInterval(function() {
             if (!teletypeState) return;
-            // Reveal a couple of chars, or one whole block unit, per tick.
-            let n = 0;
-            while (n < 3 && teletypeState.index < teletypeState.chars.length) {
-                const unit = teletypeState.chars[teletypeState.index++];
-                teletypeShow(unit);
-                n++;
-                // Block units (headings, list items) get their own tick.
-                if (unit.tagName && /^(H[1-6]|LI)$/.test(unit.tagName)) break;
-            }
+            const unit = teletypeState.chars[teletypeState.index++];
+            if (unit) teletypeShow(unit);
             if (teletypeState.index >= teletypeState.chars.length) {
                 teletypeFinish();
             }
-        }, 40);
+        }, timing);
     };
 
     /* Begins revealing already-prepared units. */
@@ -2325,6 +2324,9 @@
     /* Teletype experiment toggle. When true, new text is revealed
      * character by character (layout reserved up front). */
     window.dumpling.teletype = true;
+    /* Milliseconds between each revealed character. 0 reveals everything
+     * instantly (no animation). */
+    window.dumpling.teletypeTiming = 13;
 
     /* Set up the game when everything is loaded. */
     document.addEventListener('DOMContentLoaded', function() {
