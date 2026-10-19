@@ -1761,14 +1761,15 @@
          * element won't be placed too close to the bottom edge of the
          * viewport. */
         scrollPoint = scrollPoint + (window.innerHeight * 0.2);
-        if (output.length) {
-            // Never scroll past the start of the new content: for a
-            // situation taller than the viewport, its start must stay
-            // visible at the top instead of sliding above it.
-            const outputTop = docTop(output[0]);
-            if (scrollPoint > outputTop)
-                scrollPoint = outputTop;
-        }
+        // Never scroll past the start of this transaction's new content.
+        // (A situation may write several times; the transaction start is
+        // the true top, not just the latest write.) For a situation
+        // taller than the viewport, its start must stay visible at the
+        // top instead of sliding above it.
+        const transactionStart =
+            transactionStartStack[transactionStartStack.length-1];
+        if (scrollPoint > transactionStart)
+            scrollPoint = transactionStart;
         scrollStack[scrollStack.length-1] = scrollPoint;
     };
 
@@ -1901,15 +1902,16 @@
      * top (last) stack element to that position.
      */
     const scrollStack = [];
+    const transactionStartStack = [];
     let pendingFirstWrite = false;
     const startOutputTransaction = function() {
         if (scrollStack.length === 0) {
             pendingFirstWrite = true;
         }
         // The default is "all the way down".
-        scrollStack.push(
-            elHeight($id('content')) + elHeight($id('title')) + 60
-        );
+        const startY = elHeight($id('content')) + elHeight($id('title')) + 60;
+        scrollStack.push(startY);
+        transactionStartStack.push(startY);
     };
     const continueOutputTransaction = function() {
         if (pendingFirstWrite) {
@@ -1922,6 +1924,7 @@
     let lastScrollPoint = null;
     const endOutputTransaction = function() {
         let scrollPoint = scrollStack.pop();
+        transactionStartStack.pop();
         if (scrollStack.length === 0 && scrollPoint !== null) {
             lastScrollPoint = scrollPoint;
             if (interactive && !mobile) {
