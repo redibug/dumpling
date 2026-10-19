@@ -70,12 +70,12 @@ body {
 }
 #toolbar h1 {
     float: left;
-    font-weight: normal;
+    font-weight: 600;
     font-size: 22px;
     margin: 8px 0 0 0;
     padding: 0 10px;
-    color: #fc6;
-    text-shadow: 0 -1px 0 rgba(0,0,0,0.4);
+    color: #a61e4d;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.6);
 }
 #toolbar .nav {
     float: right;
@@ -88,12 +88,14 @@ body {
     padding: 4px 16px;
     float: right;
     text-decoration: none;\
-    text-shadow: 0 1px 0 rgba(0,0,0,0.4);
-    -webkit-border-radius: 6px;
+    text-shadow: 0 1px 0 rgba(166,30,77,0.4);
+    -webkit-border-radius: 999px;
+    border-radius: 999px;
     background-image: -webkit-gradient(linear, left top, left bottom,
-                                       from(#C00), color-stop(0.45, #a00),
-                                       color-stop(0.55, #900), to(#900));
-    border: 2px solid #600;
+                                       from(#ff8fb5), color-stop(0.45, #f76b9c),
+                                       color-stop(0.55, #f06595), to(#e64980));
+    background-image: linear-gradient(to bottom, #ff8fb5, #f76b9c 45%, #f06595 55%, #e64980);
+    border: 2px solid #b03060;
 }
 #menu {
     display: none;
