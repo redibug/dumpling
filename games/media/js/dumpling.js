@@ -1565,10 +1565,10 @@
 
     /* Teletype: new text is laid out invisibly first (so it
      * already takes up its space), then revealed with an opacity fade.
-     * Units are single characters, except headings and list items which
-     * reveal as whole blocks. Clicking anywhere finishes the reveal
-     * instantly; clicks on unrevealed links are swallowed (they just
-     * reveal instead of navigating).
+     * Units are single characters, except headings, list items, and
+     * images which reveal as whole blocks. Clicking anywhere finishes
+     * the reveal instantly; clicks on unrevealed links are swallowed
+     * (they just reveal instead of navigating).
      */
     let teletypeState = null;
     let teletypePendingNodes = null;
@@ -1625,7 +1625,7 @@
         } else if (node.nodeType === Node.ELEMENT_NODE) {
             const tag = node.tagName;
             if (tag === 'SCRIPT' || tag === 'STYLE') return;
-            if (/^H[1-6]$/.test(tag) || tag === 'LI') {
+            if (/^H[1-6]$/.test(tag) || tag === 'LI' || tag === 'IMG') {
                 teletypeHide(node);
                 units.push(node);
             } else {
