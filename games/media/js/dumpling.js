@@ -1928,7 +1928,11 @@
         if (scrollStack.length === 0 && scrollPoint !== null) {
             lastScrollPoint = scrollPoint;
             if (interactive && !mobile) {
-                smoothScrollTo(scrollPoint);
+                // Wait for the vanish to finish shrinking the page;
+                // scrolling before that overshoots.
+                whenVanishDone(function() {
+                    smoothScrollTo(scrollPoint);
+                });
             }
             scrollPoint = null;
         }
