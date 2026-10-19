@@ -1,10 +1,10 @@
 @import url("https://fonts.googleapis.com/css2?family=Tangerine&family=Quicksand:wght@400;500;600&display=swap");
 
 /* SquareCaps (George Williams, SIL OFL) powers the chapter drop caps.
-   Drop the TTF in ../fonts/ as squarecaps.ttf — see ../fonts/README.md. */
+   Drop the TTF in fonts/ as squarecaps.ttf — see fonts/README.md. */
 @font-face {
     font-family: 'SquareCaps';
-    src: url("../fonts/squarecaps.ttf") format("truetype");
+    src: url("fonts/squarecaps.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
 }

@@ -5,7 +5,7 @@ A theme is a folder in `media/themes/<name>/`:
 - `theme.css` — main stylesheet (screen)
 - `theme-mobile.css` — small-screen overrides
 - `img/` — theme images, referenced from the CSS as `../img/...`
-- `fonts/` — optional bundled fonts, referenced as `../fonts/...`
+- `fonts/` — optional bundled fonts, referenced as `fonts/...`
 
 `media/img/` holds shared assets (like `external_link.png`) that every
 theme can use via `../../img/...`.
