@@ -2190,6 +2190,9 @@
 
     /* Clear the current game output and start again. */
     const startGame = function() {
+        wasLoaded = false;
+        teletypeFinish();
+        teletypePendingNodes = null;
         progress.seed = new Date().toString();
 
         character = new Character();
