@@ -1748,6 +1748,9 @@
          * top edge of the *following* element and move that exactly
          * to the bottom (while still ensuring that this element is fully
          * visible.) */
+        if (lastTransactionFirstEl === null && output.length > 0) {
+            lastTransactionFirstEl = output[0];
+        }
         const lastOutput = output[output.length - 1];
         const nextel = lastOutput ? lastOutput.nextElementSibling : null;
         let scrollPoint;
@@ -1903,6 +1906,7 @@
      */
     const scrollStack = [];
     const transactionStartStack = [];
+    let lastTransactionFirstEl = null;
     let pendingFirstWrite = false;
     const startOutputTransaction = function() {
         if (scrollStack.length === 0) {
@@ -1912,6 +1916,7 @@
         const startY = elHeight($id('content')) + elHeight($id('title')) + 60;
         scrollStack.push(startY);
         transactionStartStack.push(startY);
+        lastTransactionFirstEl = null;
     };
     const continueOutputTransaction = function() {
         if (pendingFirstWrite) {
@@ -2397,8 +2402,15 @@
                 teletypeStart(Array.from($id('content').childNodes));
             }
             // Jump to the first (fresh) or newest (loaded) situation.
-            if (lastScrollPoint !== null && !mobile) {
-                window.scrollTo(0, lastScrollPoint);
+            if (!mobile) {
+                let target = null;
+                if (lastTransactionFirstEl &&
+                    document.contains(lastTransactionFirstEl)) {
+                    target = docTop(lastTransactionFirstEl);
+                } else if (lastScrollPoint !== null) {
+                    target = lastScrollPoint;
+                }
+                if (target !== null) window.scrollTo(0, target);
             }
             fadeIn($id("tools_wrapper"), 2000);
             $id("title").style.cursor = "default";
