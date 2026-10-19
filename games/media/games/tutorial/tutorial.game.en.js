@@ -8,8 +8,8 @@
  * but you can use anything that is guaranteed unique (a URL you own,
  * or a variation on your email address, for example). */
 /* Pick a Dumpling theme. Built-in themes live in media/themes/:
- * "strawberry-milk" (the default) and "undum" (the classic look). */
-dumpling.theme = "strawberry-milk";
+ * "dumpling" (the default) and "undum" (the classic look). */
+dumpling.theme = "dumpling";
 
 dumpling.game.id = "be1c95b9-cbc7-48c6-8e6a-89837aa9113e";
 

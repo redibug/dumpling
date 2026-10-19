@@ -10,8 +10,8 @@
  * уникально (URL, которым вы владеете, или вариацию вашего адреса 
  * e-mail, например).*/
 /* Pick a Dumpling theme. Built-in themes live in media/themes/:
- * "strawberry-milk" (the default) and "undum" (the classic look). */
-dumpling.theme = "strawberry-milk";
+ * "dumpling" (the default) and "undum" (the classic look). */
+dumpling.theme = "dumpling";
 
 dumpling.game.id = "349baf43-9ade-49a8-86d0-24e3de3ce042";
 

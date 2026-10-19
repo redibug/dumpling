@@ -2135,7 +2135,7 @@
         head.appendChild(mobile);
     };
 
-    let currentThemeName = 'strawberry-milk';
+    let currentThemeName = 'dumpling';
     Object.defineProperty(window.dumpling, 'theme', {
         enumerable: true,
         configurable: true,
