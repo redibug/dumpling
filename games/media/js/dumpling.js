@@ -791,8 +791,8 @@
             this.options = {
               all_links_once: true,
               mobile_hide_speed: 500,
-              slide_up_speed: 500,
-              fade_speed: 1500,
+              slide_up_speed: 250,
+              fade_speed: 300,
               progress_bar_speed: 1000
             }
             this.time = 0;
