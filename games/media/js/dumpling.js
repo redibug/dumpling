@@ -1945,10 +1945,16 @@
             lastScrollPoint = scrollPoint;
             if (interactive && !mobile) {
                 // Wait for the vanish to finish shrinking the page;
-                // scrolling before that overshoots. Capture the value;
-                // the variable is nulled below.
-                const target = scrollPoint;
+                // scrolling before that overshoots. Measure the target
+                // fresh at scroll time so the value can't go stale.
+                // (Captured for fallback; the variable is nulled below.)
+                const fallback = scrollPoint;
                 whenVanishDone(function() {
+                    let target = fallback;
+                    if (lastTransactionFirstEl &&
+                        document.contains(lastTransactionFirstEl)) {
+                        target = docTop(lastTransactionFirstEl);
+                    }
                     smoothScrollTo(target);
                 });
             }
