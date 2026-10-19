@@ -1,14 +1,14 @@
 // ---------------------------------------------------------------------------
 // Bearbeite diese Datei, um dein Spiel zu erstellen. Sie sollte
 // mindestens die folgenden vier Abschnitte enthalten:
-// undum.game.situations, undum.game.start,
-// undum.game.qualities, und undum.game.init.
+// dumpling.game.situations, dumpling.game.start,
+// dumpling.game.qualities, und dumpling.game.init.
 // ---------------------------------------------------------------------------
 
 /* Eine eindeutige Kennung fuer das Spiel (wird nicht im Spiel angezeigt)
  * Man kann eine UUID benutzen oder etwas anderes, was garantiert einzigartig
  * ist, z.B. eine eigene URL oder eine Variation der eigenen E-Mail-Adresse). */
-undum.game.id = "349baf43-9ade-49a8-86d0-24e3de3ce072";
+dumpling.game.id = "349baf43-9ade-49a8-86d0-24e3de3ce072";
 
 /* Eine Zeichenkette, die angibt, um welche Version des Spiels es sich handelt. 
  * Dies ist wichtig fuers Speichern und Laden: Wenn man den Inhalt eines Spiels
@@ -16,11 +16,11 @@ undum.game.id = "349baf43-9ade-49a8-86d0-24e3de3ce072";
  * Wenn man nach einer Aenderung des Inhalts diese Versionsnummer ebenfalls
  * aendert, dann wird damit verhindert, dass Undum einen Spielstand aus einer 
  * alten Version zu laden versucht und dabei eventuell abstuerzt. */
-undum.game.version = "1.0";
+dumpling.game.version = "1.0";
 
 /* Die Situationen, in denen das Spiel sich befinden kann. Jede hat eine eindeutige Kennung. */
-undum.game.situations = {
-    start: new undum.SimpleSituation(
+dumpling.game.situations = {
+    start: new dumpling.SimpleSituation(
         `<h1>Los geht's mit Undum</h1>
         <img src='media/games/tutorial/woodcut1.png' class='float_right'>
         <p>Willkommen beim Undum-Tutorium. Mit Undum kann man
@@ -43,12 +43,12 @@ undum.game.situations = {
     // allgemeinen "Situation"-Datentyps. Auf diese Weise erzeugen wir
     // Text, indem wir ihn aus der HTML-Datei des Spiels ziehen. Das ist bei statischem Text
     // sinnvoller als ihn hier komplett auszuschreiben.
-    rooms: new undum.Situation({
+    rooms: new dumpling.Situation({
         enter: function(character, system, from) {
             system.write(document.getElementById("s_rooms").innerHTML);
         }
     }),
-    todo: new undum.SimpleSituation(
+    todo: new dumpling.SimpleSituation(
         `<p>Zwei Dinge k&ouml;nnen in einer Situation passieren. Entweder
         <a href='links'>verl&auml;sst</a> die Spielfigur diese Situation und ger&auml;t
         in eine andere, oder sie f&uuml;hrt eine <a href='./do-something'>Aktion</a> aus.
@@ -93,7 +93,7 @@ undum.game.situations = {
             }
         }
     ),
-    links: new undum.SimpleSituation(
+    links: new dumpling.SimpleSituation(
         `<h1>Ver&auml;nderlicher Inhalt</h1>
         <p>Vor jedem neuen Textabschnitt f&uuml;gt Undum eine
         kleine Linie am Rand ein. Damit kann der Spieler auf einen Blick
@@ -130,7 +130,7 @@ undum.game.situations = {
         <p class='transient'>Gleich erf&auml;hrst du mehr &uuml;ber diese Links
         und wie du ihre Wirkungsweise <a href='sticky'>&auml;ndern kannst</a>.</p>`
     ),
-    sticky: new undum.SimpleSituation(
+    sticky: new dumpling.SimpleSituation(
         `<h1>Links</h1>
         <p>Es gibt drei Arten von Links in Undum. Zwei kennen wir schon:
         Links, mit denen man in eine neue Situation wechselt, und Links,
@@ -171,7 +171,7 @@ undum.game.situations = {
         anzubieten, die w&auml;hrend der gesamten Geschichte g&uuml;ltig bleiben, z.B.
         einen Zauberspruch, mit dem die Spielfigur sich nach Hause teleportieren kann.</p>`
     ),
-    oneshot: new undum.SimpleSituation(
+    oneshot: new dumpling.SimpleSituation(
         `<p>Es gibt noch folgende Variante f&uuml;r die Link-Darstellung:
         Wenn man einem Link die CSS-Klasse <em>once</em> ('einmal') verpasst,
         dann verschwindet der Link, nachdem er angeklickt wurde. Das kannst
@@ -201,7 +201,7 @@ undum.game.situations = {
             }
         }
     ),
-    qualities: new undum.SimpleSituation(
+    qualities: new dumpling.SimpleSituation(
         `<h1>Eigenschaften</h1>
         <p>Genug von Situationen! Lass uns &uuml;ber die Spielfigur sprechen.
         Die Spielfigur wird durch ihre <em>qualities</em> ('Eigenschaften')
@@ -230,7 +230,7 @@ undum.game.situations = {
     ),
     // wenn eine Situations-Kennung einen Bindestrich enthaelt wie die Folgende,
     // dann sollte sie in Anfuehrungsstrichen stehen
-    "quality-types": new undum.SimpleSituation(
+    "quality-types": new dumpling.SimpleSituation(
         `<p>Nicht alle Eigenschaften werden im Spielfiguren-Feld als
         Zahlen aufgelistet. Intern sind sie zwar alle Zahlen, aber sie
         k&ouml;nnen verschieden angezeigt werden. 'Gl&uuml;ck' z.B.
@@ -268,7 +268,7 @@ undum.game.situations = {
             }
         }
     ),
-    "character-text": new undum.SimpleSituation(
+    "character-text": new dumpling.SimpleSituation(
         `<h1>Spielfiguren-Text</h1>
         <p>&Uuml;ber der Liste mit den Eigenschaften steht ein kurzer Text,
         den wir den Spielfigur-Text ('character-text') nennen wollen. Dieser kann
@@ -290,7 +290,7 @@ undum.game.situations = {
             }
         }
     ),
-    progress: new undum.SimpleSituation(
+    progress: new dumpling.SimpleSituation(
         `<h1>Fortschritt anzeigen</h1>
         <p>Manchmal m&ouml;chte man, dass es als wichtiges Ereignis
         wahrgenommen wird, wenn sich eine Eigenschaft &auml;ndert. Deshalb
@@ -315,7 +315,7 @@ undum.game.situations = {
             }
         }
     ),
-    "boost-stamina": new undum.SimpleSituation(
+    "boost-stamina": new dumpling.SimpleSituation(
         `<p>Die Fortschrittsanzeige ist auch n&uuml;tzlich, wenn im
         Spielfigur-Feld der Wert einer Eigenschaft als ganze Zahl
         angezeigt wird, und eine Aktion nur eine Nachkomma-Stelle der
@@ -351,7 +351,7 @@ undum.game.situations = {
 	<em>options</em>-Klasse. Klick auf eine der Zeilen (die gesamte Breite
 	ist anklickbar), um die entsprechende Option zu w&auml;hlen.</p>`
     ),
-    one: new undum.SimpleSituation(
+    one: new dumpling.SimpleSituation(
         `<h1>Option Eins</h1>
         <p>Du hast Option Eins gew&auml;hlt, was wahrscheinlich auch besser so ist, denn
         Option Zwei ist in schlecht gereimtem Koptisch verfasst.
@@ -359,7 +359,7 @@ undum.game.situations = {
         <p>Von hier ist es nur ein <a href='saving'>kleiner Schritt</a> zum
         Rest des Tutoriums.</p>`
     ),
-    "two": new undum.SimpleSituation(
+    "two": new dumpling.SimpleSituation(
         `<h1>Option Zwei</h1>
         <p>Du hast Option Zwei gew&auml;hlt - die gef&auml;llt mir auch am besten.
         Die Photos, die bei Option Eins auftauchen, sind einfach zu verst&ouml;rend.
@@ -368,12 +368,12 @@ undum.game.situations = {
        Rest des Tutoriums.</p>`
     ),
     // An dieser Stelle ziehen wir den gewuenschten Text wieder aus der HTML-Datei.
-    "saving": new undum.Situation({
+    "saving": new dumpling.Situation({
         enter: function(character, system, from) {
             system.write(document.getElementById("s_saving").innerHTML);
         }
     }),
-    "last": new undum.SimpleSituation(
+    "last": new dumpling.SimpleSituation(
         `<h1>Wie geht es nun weiter</h1>
         <p>So, das war's mit unserem Rundgang durch Undum. Diese Situation
         ist das Ende, denn sie stellt keine weiteren Links bereit. Der 'Ende'-Hinweis unten ist
@@ -397,27 +397,27 @@ undum.game.situations = {
 
 // ---------------------------------------------------------------------------
 /* Die Kennung der Start-Situation. */
-undum.game.start = "start";
+dumpling.game.start = "start";
 
 // ---------------------------------------------------------------------------
 /* Hier definieren wir die Eigenschaften (qualities) unserer Hauptfigur.
  * Wir muessen sie nicht erschoepfend auflisten, aber wenn eine hier nicht
  * auftaucht, dann wird sie nicht in der "Spielfigur"-Leiste der Benutzeroberflaeche angezeigt. */
-undum.game.qualities = {
-    skill: new undum.IntegerQuality(
+dumpling.game.qualities = {
+    skill: new dumpling.IntegerQuality(
         "Gewandtheit", {priority:"0001", group:'stats'}
     ),
-    stamina: new undum.NumericQuality(
+    stamina: new dumpling.NumericQuality(
         "<span title='St&auml;rke war in den deutschen Ausgaben der Fighting-Fantasy-Spielb&uuml;cher die &uuml;bliche &Uuml;bersetzung f&uuml;r stamina - gemeint sind Kraft, Gesundheit, Ausdauer, Lebensenergie.'>St&auml;rke</span>", {priority:"0002", group:'stats'}
     ),
-    luck: new undum.FudgeAdjectivesQuality( // Fudge bezieht sich auf das FUDGE-Rollenspielsystem
+    luck: new dumpling.FudgeAdjectivesQuality( // Fudge bezieht sich auf das FUDGE-Rollenspielsystem
         "<span title='Gewandtheit, St&auml;rke und Gl&uuml;ck stammen aus den hochverehrten Fighting-Fantasy-Spielb&uuml;chern. Die Bezeichnungen f&uuml;r die Gl&uuml;cksstufen kommen aus dem FUDGE-Rollenspielsystem. Dieser Tooltip zeigt, dass man beliebiges HTML im Label einer Eigenschaft verwenden kann (in diesem Fall ein span mit einem title attribute).'>Gl&uuml;ck</span>",
         {priority:"0003", group:'stats'}
     ),
-    inspiration: new undum.NonZeroIntegerQuality(
+    inspiration: new dumpling.NonZeroIntegerQuality(
         "Inspiration", {priority:"0001", group:'progress'}
     ),
-    novice: new undum.OnOffQuality(
+    novice: new dumpling.OnOffQuality(
         "Novize", {priority:"0002", group:'progress', onDisplay:"&#10003;"}
     )
 };
@@ -429,15 +429,15 @@ undum.game.qualities = {
  * Eigenschaftsdefinitionen ohne Gruppe erscheinen am Ende.
  * Wenn eine Eigenschaftsdefinition einer nicht-existenten Gruppe
  * zugeordnet wird, ist das ein Fehler. */
-undum.game.qualityGroups = {
-    stats: new undum.QualityGroup(null, {priority:"0001"}),
-    progress: new undum.QualityGroup('Fortschritt', {priority:"0002"})
+dumpling.game.qualityGroups = {
+    stats: new dumpling.QualityGroup(null, {priority:"0001"}),
+    progress: new dumpling.QualityGroup('Fortschritt', {priority:"0002"})
 };
 
 // ---------------------------------------------------------------------------
 /* Diese Funktion wird vor dem Start des Spiels ausgefuehrt. Normalerweise
  * konfiguriert man hiermit die Eigenschaften der Hauptfigur bei Spielbeginn. */
-undum.game.init = function(character, system) {
+dumpling.game.init = function(character, system) {
     character.qualities.skill = 12;
     character.qualities.stamina = 12;
     character.qualities.luck = 0;

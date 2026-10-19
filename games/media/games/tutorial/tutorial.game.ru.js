@@ -1,40 +1,40 @@
 // Перевод на русский: Oreolek, 2013
 // ---------------------------------------------------------------------------
 // Отредактируйте этот файл, чтобы описать вашу игру. Он должен иметь не
-// менее четырёх разделов данных: undum.game.situations, undum.game.start,
-// undum.game.qualities, и undum.game.init.
+// менее четырёх разделов данных: dumpling.game.situations, dumpling.game.start,
+// dumpling.game.qualities, и dumpling.game.init.
 // ---------------------------------------------------------------------------
 
 /* Уникальный идентификатор вашей игры. Он никогда не отображается. 
  * Я использую UUID, но вы можеет использовать всё что гарантированно
  * уникально (URL, которым вы владеете, или вариацию вашего адреса 
  * e-mail, например).*/
-undum.game.id = "349baf43-9ade-49a8-86d0-24e3de3ce042";
+dumpling.game.id = "349baf43-9ade-49a8-86d0-24e3de3ce042";
 
 /* A string indicating what version of the game this is. Versions are
  * used to control saved-games. If you change the content of a game,
  * the saved games are unlikely to work. Changing this version number
  * prevents Undum from trying to load the saved-game and crashing. */
-undum.game.version = "1.0";
+dumpling.game.version = "1.0";
 
 /* Ситуации, в которых может быть игра. Каждая имеет уникальный ID. */
 
 // Строки локализации
-undum.language["ru"]["start_title"] = "Знакомство с Undum";
-undum.language["ru"]["situations_title"] = "Из чего сделаны игры Undum";
-undum.language["ru"]["links_title"] = "Смена наполнения";
-undum.language["ru"]["sticky_title"] = "Разные виды ссылок";
-undum.language["en"]["qualities_title"] = "Qualities and the Character";
-undum.language["ru"]["qualities_title"] = "Качества и персонаж";
-undum.language["en"]["progress_title"] = "Showing a Progress Bar";
-undum.language["ru"]["progress_title"] = "Отображение прогресса";
-undum.language["en"]["saving_title"] = "Saving and Loading";
-undum.language["ru"]["saving_title"] = "Сохранение и загрузка";
-undum.language["en"]["last_title"] = "Finish the Tutorial";
-undum.language["ru"]["last_title"] = "Закончить обучение";
+dumpling.language["ru"]["start_title"] = "Знакомство с Undum";
+dumpling.language["ru"]["situations_title"] = "Из чего сделаны игры Undum";
+dumpling.language["ru"]["links_title"] = "Смена наполнения";
+dumpling.language["ru"]["sticky_title"] = "Разные виды ссылок";
+dumpling.language["en"]["qualities_title"] = "Qualities and the Character";
+dumpling.language["ru"]["qualities_title"] = "Качества и персонаж";
+dumpling.language["en"]["progress_title"] = "Showing a Progress Bar";
+dumpling.language["ru"]["progress_title"] = "Отображение прогресса";
+dumpling.language["en"]["saving_title"] = "Saving and Loading";
+dumpling.language["ru"]["saving_title"] = "Сохранение и загрузка";
+dumpling.language["en"]["last_title"] = "Finish the Tutorial";
+dumpling.language["ru"]["last_title"] = "Закончить обучение";
 
-undum.game.situations = {
-    start: new undum.SimpleSituation(
+dumpling.game.situations = {
+    start: new dumpling.SimpleSituation(
         "<h1>"+"start_title".l()+`</h1>
         <img src='tutorial/woodcut1.png' class='float_right'>
         <p>Добро пожаловать в обучающую игру по Undum. Undum - это инструмент для написания
@@ -57,7 +57,7 @@ undum.game.situations = {
     // Для разнообразия, здесь мы задаём ситуацию, используя высокоуровневый тип Situation.
     // Это прекрасный подход, чтобы сгенерировать текст, просто найдя его в HTML документе.
     // Для статичного текста в этом больше смысла, чем записывать его просто так.
-    situations: new undum.Situation({
+    situations: new dumpling.Situation({
         enter: function(character, system, from) {
             system.write(document.getElementById("s_situations").innerHTML);
         },
@@ -65,7 +65,7 @@ undum.game.situations = {
         optionText: "situations_title".l(),
         displayOrder: 1
     }),
-    todo: new undum.SimpleSituation(
+    todo: new dumpling.SimpleSituation(
         `<p>В ситуации может произойти две вещи. Либо персонаж
         <a href='links'>покидает</a> ситуацию и входит в другую, либо
         он выполняет некоторое <a href='./do-something'>действие</a>. Действия могут
@@ -100,7 +100,7 @@ undum.game.situations = {
             }
         }
     ),
-    links: new undum.SimpleSituation(
+    links: new dumpling.SimpleSituation(
         `<p>Между каждым кусочком нового текста Undum вставляет отчётливую линию
         на полях. Она позволяет вам быстро увидеть всё, что было выдано
         в качестве результата вашего последнего клика.
@@ -134,10 +134,10 @@ undum.game.situations = {
             tags: ["topic"]
         }
     ),
-    sticky: new undum.SimpleSituation(
+    sticky: new dumpling.SimpleSituation(
         `<p>В Undum существует три типа ссылок. Мы уже видели первые два:
         ссылки смены ситцаций и ссылки, вызывающие действие. Когда вы
-        включаете ссылку в ваш текст, undum распознаёт её и оформляет
+        включаете ссылку в ваш текст, dumpling распознаёт её и оформляет
         подобающим образом. Если вы создаёте ссылку с атрибутом HTML <em>href</em>,
         содержащим только имя ('зал', например), то она отправит персонажа
         в ситуацию с этим именем. Ссылки с двумя компонентами ('зал/посмотреть-картину')
@@ -170,7 +170,7 @@ undum.game.situations = {
             heading: "sticky_title".l()
         }
     ),
-    oneshot: new undum.SimpleSituation(
+    oneshot: new dumpling.SimpleSituation(
         `<p>Ещё одна последняя настройка ссылок. Если вы назначите ссылке CSS класс
         <em>once</em>, то она исчезнет после нажатия. Это используется 
         <a href='./one-time-action' class='once'>(проверьте сами)</a> для
@@ -194,7 +194,7 @@ undum.game.situations = {
             }
         }
     ),
-    qualities: new undum.SimpleSituation(
+    qualities: new dumpling.SimpleSituation(
         `<p>Хватит о ситуациях, давайте поговорим о персонаже. Персонаж описывается
         при помощи серии <em>качеств.</em> Это численные значения, которые могут описать
         всё от врождённых способностей до количества ресурсов,подконтрольных персонажу.
@@ -220,7 +220,7 @@ undum.game.situations = {
             }
         }
     ),
-    "quality-types": new undum.SimpleSituation(
+    "quality-types": new dumpling.SimpleSituation(
         `<p>Не все качества в панели персонажа отображаются как числа. Внутри они
         все числовые, но разные качества могут выбирать, как отображать себя. Например,
         Удача отображается словами (на основе шкалы прилагательных FUDGE RPG)
@@ -253,7 +253,7 @@ undum.game.situations = {
             }
         }
     ),
-    "character-text": new undum.SimpleSituation(
+    "character-text": new dumpling.SimpleSituation(
         `<h1>Текст персонажа</h1>
         <p>Над списком качеств находится коротенький кусочек текста, называемый
         текстом персонажа. Он как-то описывает героя. Он может быть задан
@@ -274,7 +274,7 @@ undum.game.situations = {
             }
         }
     ),
-    progress: new undum.SimpleSituation(
+    progress: new dumpling.SimpleSituation(
         `<p>Иногда вы хотите сделать изменение качества более заметным событием.
         Вы можете сделать это, анимировав его. Если вы
         <a href='./boost-stamina-action'>поднимете вашу Ловкость</a>,
@@ -301,7 +301,7 @@ undum.game.situations = {
             }
         }
     ),
-    "boost-stamina": new undum.SimpleSituation(
+    "boost-stamina": new dumpling.SimpleSituation(
         `<p>Полоса прогресса также удобна в ситуациях, где блок персонажа
         показывает только общее число качеств, а тем временем какое-нибудь действие меняет
         одно из них. Например, вы можете захотеть показать прогресс персонажа к следующему уровню - 
@@ -316,7 +316,7 @@ undum.game.situations = {
         <p class='transient'>Давайте почитаем про <a href='hub'>что-нибудь ещё.</a></p>`
     ),
     // Опять, мы получаем текст из HTML файла.
-    "saving": new undum.Situation({
+    "saving": new dumpling.Situation({
         enter: function(character, system, from) {
             system.write(document.getElementById("s_saving").innerHTML);
         },
@@ -324,7 +324,7 @@ undum.game.situations = {
         displayOrder: 6,
         optionText: "saving_title".l(),
     }),
-    "implicit-boost": new undum.SimpleSituation(
+    "implicit-boost": new dumpling.SimpleSituation(
         `<p>Ваша Удача была увеличена<span class='transient'>, проверьте список 
         ссылок, вдруг они изменились?</span>.</p>`,
         {
@@ -340,7 +340,7 @@ undum.game.situations = {
             }
         }
     ),
-    "implicit-drop": new undum.SimpleSituation(
+    "implicit-drop": new dumpling.SimpleSituation(
         `<p>Ваша Удача была уменьшена<span class='transient'>, проверьте список 
         ссылок, вдруг они изменились?</span>.</p>`,
         {
@@ -356,7 +356,7 @@ undum.game.situations = {
             }
         }
     ),
-    "high-luck-only": new undum.SimpleSituation(
+    "high-luck-only": new dumpling.SimpleSituation(
         `<p>Ваша Удача выше чем 'нормально'. Ссылка на эту ситуацию не появилась бы, 
         если бы вам она была меньше.</p>`,
         {
@@ -371,7 +371,7 @@ undum.game.situations = {
             }
         }
     ),
-    "low-luck-only": new undum.SimpleSituation(
+    "low-luck-only": new dumpling.SimpleSituation(
         `<p>Ваша Удача ниже, чем 'нормально'. Ссылка на эту ситуацию появляется 
         в любом случае, но вы можете выбрать её только если вы сбросите Удачу.
         Это проверяет метод <em>canChoose</em>.</p>`,
@@ -388,7 +388,7 @@ undum.game.situations = {
         }
     ),
 
-    "last": new undum.SimpleSituation(
+    "last": new dumpling.SimpleSituation(
         `<h1>Куда теперь</h1>
         <p>Итак, это всё. Мы показали весь Undum. Эта ситуация - конечная, поскольку
         в ней нет дальнейших ссылок. Сообщение «Конец» - это просто HTML вывод ситуации.
@@ -413,28 +413,28 @@ undum.game.situations = {
 
 // ---------------------------------------------------------------------------
 /* Идентификатор стартовой ситуации. */
-undum.game.start = "start";
+dumpling.game.start = "start";
 
 // ---------------------------------------------------------------------------
 /* Здесь мы определяем все качества, присущие нашим персонажам.
  * Мы не должны быть исчерпывающими, но если мы что-то пропустим, то
  * это качество никогда не покажется в панели персонажа. */
-undum.game.qualities = {
-    skill: new undum.IntegerQuality(
+dumpling.game.qualities = {
+    skill: new dumpling.IntegerQuality(
         "Сила", {priority:"0001", group:'stats'}
     ),
-    stamina: new undum.NumericQuality(
+    stamina: new dumpling.NumericQuality(
         "Ловкость", {priority:"0002", group:'stats'}
     ),
-    luck: new undum.FudgeAdjectivesQuality( // Fudge as in the FUDGE RPG
+    luck: new dumpling.FudgeAdjectivesQuality( // Fudge as in the FUDGE RPG
         "<span title='Сила, Ловкость и Удача с почтением позаимствованы из книг-игр серии Fighting Fantasy. Слова, описывающие Удачу, взяты из FUDGE RPG. Эта подсказка иллюстрирует то, что вы можете использовать любой HTML в качестве описания качества (в этом случае, тег span, содержащий атрибут названия).'>Удача</span>",
         {priority:"0003", group:'stats'}
     ),
 
-    inspiration: new undum.IntegerQuality(
+    inspiration: new dumpling.IntegerQuality(
         "Вдохновение", {priority:"0001", group:'progress'}
     ),
-    novice: new undum.OnOffQuality(
+    novice: new dumpling.OnOffQuality(
         "Новичок", {priority:"0002", group:'progress', onDisplay:"&#10003;"}
     )
 };
@@ -444,15 +444,15 @@ undum.game.qualities = {
  * их заголовки (которые могут быть null - нет заголовка), и порядок.
  * Качества без группы появляются в конце. Описание качества,
  * приналежащее к несуществующей группе, является ошибкой.*/
-undum.game.qualityGroups = {
-    stats: new undum.QualityGroup(null, {priority:"0001"}),
-    progress: new undum.QualityGroup('Прогресс', {priority:"0002"})
+dumpling.game.qualityGroups = {
+    stats: new dumpling.QualityGroup(null, {priority:"0001"}),
+    progress: new dumpling.QualityGroup('Прогресс', {priority:"0002"})
 };
 
 // ---------------------------------------------------------------------------
 /* Эта функция запускается перед началом игры. Обычно она используется
  * для того, чтобы настроить персонажа перед игрой. */
-undum.game.init = function(character, system) {
+dumpling.game.init = function(character, system) {
     character.qualities.skill = 12;
     character.qualities.stamina = 12;
     character.qualities.luck = 0;

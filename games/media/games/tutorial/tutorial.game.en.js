@@ -1,34 +1,34 @@
 // ---------------------------------------------------------------------------
 // Edit this file to define your game. It should have at least four
-// sets of content: undum.game.situations, undum.game.start,
-// undum.game.qualities, and undum.game.init.
+// sets of content: dumpling.game.situations, dumpling.game.start,
+// dumpling.game.qualities, and dumpling.game.init.
 // ---------------------------------------------------------------------------
 
 /* A unique id for your game. This is never displayed. I use a UUID,
  * but you can use anything that is guaranteed unique (a URL you own,
  * or a variation on your email address, for example). */
-undum.game.id = "be1c95b9-cbc7-48c6-8e6a-89837aa9113e";
+dumpling.game.id = "be1c95b9-cbc7-48c6-8e6a-89837aa9113e";
 
 /* A string indicating what version of the game this is. Versions are
  * used to control saved-games. If you change the content of a game,
  * the saved games are unlikely to work. Changing this version number
  * prevents Undum from trying to load the saved-game and crashing. */
-undum.game.version = "1.0";
+dumpling.game.version = "1.0";
 
 /* A variable that changes the fade out speed of the option text on
  * a mobile. */
-undum.game.mobileHide = 2000
+dumpling.game.mobileHide = 2000
 
 /* A variable that changes the options fade out speed. */
-undum.game.fadeSpeed = 1500
+dumpling.game.fadeSpeed = 1500
 
 /* A variable that changes the slide up speed after clicking on an
  * option. */
-undum.game.slideUpSpeed = 500
+dumpling.game.slideUpSpeed = 500
 
 /* The situations that the game can be in. Each has a unique ID. */
-undum.game.situations = {
-    start: new undum.SimpleSituation(
+dumpling.game.situations = {
+    start: new dumpling.SimpleSituation(
         `<h1>Starting Out with Undum</h1>
         <img src='media/games/tutorial/woodcut1.png' class='float_right'>
         <p>Welcome to the Undum tutorial. Undum is a tool for writing
@@ -54,7 +54,7 @@ undum.game.situations = {
     // Situation type. This is a neat approach to generate text by
     // looking it up in the HTML document. For static text that makes
     // more sense than writing it longhand.
-    situations: new undum.Situation({
+    situations: new dumpling.Situation({
         enter: function(character, system, from) {
             system.write(document.getElementById("s_situations").innerHTML);
         },
@@ -62,7 +62,7 @@ undum.game.situations = {
         optionText: "What Undum Games are Made Of",
         displayOrder: 1
     }),
-    todo: new undum.SimpleSituation(
+    todo: new dumpling.SimpleSituation(
         `<p>Two things can happen in a situation. The character either
         <a href='links'>leaves</a> the situation and enters another one, or
         they carry out some <a href='./do-something'>action</a>. Actions may
@@ -100,7 +100,7 @@ undum.game.situations = {
             }
         }
     ),
-    links: new undum.SimpleSituation(
+    links: new dumpling.SimpleSituation(
         `<p>Between each chunk of new text, Undum inserts a discreet line
         in the margin. This allows you to see at a glance everything that
         has been output as a result of your last click.
@@ -136,7 +136,7 @@ undum.game.situations = {
             tags: ["topic"]
         }
     ),
-    sticky: new undum.SimpleSituation(
+    sticky: new dumpling.SimpleSituation(
         `<p>There are three types of link in Undum. The first two we've seen
         in previous topics:
         links to change situation and links to carry out an action. When you
@@ -179,7 +179,7 @@ undum.game.situations = {
             heading: "Different Kinds of Links"
         }
     ),
-    oneshot: new undum.SimpleSituation(
+    oneshot: new dumpling.SimpleSituation(
         `<p>There is one final option for links. If you give a link
         the <em>once</em> CSS class, then that link will disappear
         after it is clicked. This is  used (as in
@@ -206,7 +206,7 @@ undum.game.situations = {
             }
         }
     ),
-    qualities: new undum.SimpleSituation(
+    qualities: new dumpling.SimpleSituation(
         `<p>Let's talk about the character.
         The character is described by a series of <em>qualities</em>. These
         are numeric values that can describe anything from natural abilities
@@ -234,7 +234,7 @@ undum.game.situations = {
             }
         }
     ),
-    "quality-types": new undum.SimpleSituation(
+    "quality-types": new dumpling.SimpleSituation(
         `<p>Not all the qualities in the character panel are displayed as
         numeric. Internally they are all numeric, but different qualities
         get to choose how to display themselves. So 'Luck', for example, is
@@ -271,7 +271,7 @@ undum.game.situations = {
             }
         }
     ),
-    "character-text": new undum.SimpleSituation(
+    "character-text": new dumpling.SimpleSituation(
         `<h1>Character Text</h1>
         <p>Above the list of qualities is a short piece of text, called
         the character-text. This describes the character in some way. It
@@ -292,7 +292,7 @@ undum.game.situations = {
             }
         }
     ),
-    progress: new undum.SimpleSituation(
+    progress: new dumpling.SimpleSituation(
         `<p>Sometimes you want to make the change in a quality into a more
         significant event. You can do this by animating the change in
         quality. If you <a href='./boost-stamina-action'>boost your
@@ -320,7 +320,7 @@ undum.game.situations = {
             }
         }
     ),
-    "boost-stamina": new undum.SimpleSituation(
+    "boost-stamina": new dumpling.SimpleSituation(
         `<p>
         <img src='media/games/tutorial/woodcut3.png' class='float_right'>
         The progress bar is also useful in situations where the
@@ -337,7 +337,7 @@ undum.game.situations = {
         <p>Let's <a href='hub'>return to the topic list.</a></p>`
         ),
     // Again, we'll retrieve the text we want from the HTML file.
-    "saving": new undum.Situation({
+    "saving": new dumpling.Situation({
         enter: function(character, system, from) {
             system.write(document.getElementById("s_saving").innerHTML);
         },
@@ -346,7 +346,7 @@ undum.game.situations = {
         optionText: "Saving and Loading"
     }),
 
-    "implicit-boost": new undum.SimpleSituation(
+    "implicit-boost": new dumpling.SimpleSituation(
         `<p>Your luck has been boosted<span class='transient'>, check the
         list of options to see if they have changed</span>.</p>`,
         {
@@ -362,7 +362,7 @@ undum.game.situations = {
             }
         }
     ),
-    "implicit-drop": new undum.SimpleSituation(
+    "implicit-drop": new dumpling.SimpleSituation(
         `<p>Your luck has been reduced<span class='transient'>, check the
         list of options to see if they have changed</span>.</p>`,
         {
@@ -378,7 +378,7 @@ undum.game.situations = {
             }
         }
     ),
-    "high-luck-only": new undum.SimpleSituation(
+    "high-luck-only": new dumpling.SimpleSituation(
         `<p>Your luck is higher than 'fair'. The link to this 
         situation would not
         have appeared if it were lower.</p>`,
@@ -394,7 +394,7 @@ undum.game.situations = {
             }
         }
     ),
-    "low-luck-only": new undum.SimpleSituation(
+    "low-luck-only": new dumpling.SimpleSituation(
         `<p>Your luck is lower than 'fair'. The link to this situation 
         appears whether
         it is low or high, but can only be chosen if it is low. It does this
@@ -412,7 +412,7 @@ undum.game.situations = {
         }
     ),
 
-    "last": new undum.SimpleSituation(
+    "last": new dumpling.SimpleSituation(
         `<h1>Where to Go Now</h1>
         <p>So that's it. We've covered all of Undum. This situation is the
         end, because it has no further links. The 'The End' message is
@@ -439,28 +439,28 @@ undum.game.situations = {
 
 // ---------------------------------------------------------------------------
 /* The Id of the starting situation. */
-undum.game.start = "start";
+dumpling.game.start = "start";
 
 // ---------------------------------------------------------------------------
 /* Here we define all the qualities that our characters could
  * possess. We don't have to be exhaustive, but if we miss one out then
  * that quality will never show up in the character bar in the UI. */
-undum.game.qualities = {
-    skill: new undum.IntegerQuality(
+dumpling.game.qualities = {
+    skill: new dumpling.IntegerQuality(
         "Skill", {priority:"0001", group:'stats'}
     ),
-    stamina: new undum.NumericQuality(
+    stamina: new dumpling.NumericQuality(
         "Stamina", {priority:"0002", group:'stats'}
     ),
-    luck: new undum.FudgeAdjectivesQuality( // Fudge as in the FUDGE RPG
+    luck: new dumpling.FudgeAdjectivesQuality( // Fudge as in the FUDGE RPG
         "<span title='Skill, Stamina and Luck are reverently borrowed from the Fighting Fantasy series of gamebooks. The words representing Luck are from the FUDGE RPG. This tooltip is illustrating that you can use any HTML in the label for a quality (in this case a span containing a title attribute).'>Luck</span>",
         {priority:"0003", group:'stats'}
     ),
 
-    inspiration: new undum.NonZeroIntegerQuality(
+    inspiration: new dumpling.NonZeroIntegerQuality(
         "Inspiration", {priority:"0001", group:'progress'}
     ),
-    novice: new undum.OnOffQuality(
+    novice: new dumpling.OnOffQuality(
         "Novice", {priority:"0002", group:'progress', onDisplay:"&#10003;"}
     )
 };
@@ -471,15 +471,15 @@ undum.game.qualities = {
  * heading) and ordering. QualityDefinitions without a group appear at
  * the end. It is an error to have a quality definition belong to a
  * non-existent group. */
-undum.game.qualityGroups = {
-    stats: new undum.QualityGroup(null, {priority:"0001"}),
-    progress: new undum.QualityGroup('Progress', {priority:"0002"})
+dumpling.game.qualityGroups = {
+    stats: new dumpling.QualityGroup(null, {priority:"0001"}),
+    progress: new dumpling.QualityGroup('Progress', {priority:"0002"})
 };
 
 // ---------------------------------------------------------------------------
 /* This function gets run before the game begins. It is normally used
  * to configure the character at the start of play. */
-undum.game.init = function(character, system) {
+dumpling.game.init = function(character, system) {
     character.qualities.skill = 12;
     character.qualities.stamina = 12;
     character.qualities.luck = 0;
