@@ -1757,18 +1757,19 @@
         } else {
             scrollPoint = docTop(nextel) - window.innerHeight;
         }
+        /* We add a fifth of the window height to this point, so that the
+         * element won't be placed too close to the bottom edge of the
+         * viewport. */
+        scrollPoint = scrollPoint + (window.innerHeight * 0.2);
         if (output.length) {
+            // Never scroll past the start of the new content: for a
+            // situation taller than the viewport, its start must stay
+            // visible at the top instead of sliding above it.
             const outputTop = docTop(output[0]);
             if (scrollPoint > outputTop)
                 scrollPoint = outputTop;
         }
-        /* We add a fifth of the window height to this point, so that the
-         * element won't be placed too close to the bottom edge of the
-         * viewport. If we overshoot the viewport, we'll just go down to
-         * the bottom - desirable behaviour anyway, especially if we are
-         * already there. */
-        scrollStack[scrollStack.length-1] =
-            (scrollPoint + (window.innerHeight * 0.2));
+        scrollStack[scrollStack.length-1] = scrollPoint;
     };
 
     /* Gets the unique id used to identify saved games. */
