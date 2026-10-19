@@ -181,11 +181,34 @@
         return getComputedStyle(element).display !== 'none';
     };
 
+    /* Cache of default display values per tag name. */
+    const defaultDisplays = {};
+    /* The default display value for a tag (e.g. "block" for divs). */
+    const defaultDisplay = function(tagName) {
+        const tag = tagName.toLowerCase();
+        if (!(tag in defaultDisplays)) {
+            const probe = document.createElement(tag);
+            document.body.appendChild(probe);
+            defaultDisplays[tag] = getComputedStyle(probe).display;
+            probe.remove();
+        }
+        return defaultDisplays[tag];
+    };
+    /* Show an element, overriding any stylesheet display:none.
+     * Matches jQuery's .show(): plain style.display = '' is not
+     * enough when the stylesheet hides the element. */
+    const showElement = function(element) {
+        element.style.display = '';
+        if (getComputedStyle(element).display === 'none') {
+            element.style.display = defaultDisplay(element.tagName);
+        }
+    };
+
     /* Fade/slide helpers built on the Web Animations API, replacing
      * jQuery's fadeIn/fadeOut/slideDown/slideUp/animate. */
 
     const fadeIn = function(element, ms, callback) {
-        element.style.display = '';
+        showElement(element);
         const anim = element.animate(
             [{opacity: 0}, {opacity: 1}], {duration: ms}
         );
@@ -205,7 +228,7 @@
     };
 
     const slideDown = function(element, ms, callback) {
-        element.style.display = '';
+        showElement(element);
         element.style.overflow = 'hidden';
         const targetHeight = element.scrollHeight;
         const anim = element.animate(
@@ -2108,7 +2131,7 @@
         // Display the "click to begin" message. (We do this in code
         // so that, if Javascript is off, it doesn't happen.)
         qsa(".click_message").forEach(function(element) {
-            element.style.display = '';
+            showElement(element);
         });
 
         // Show the game when we click on the title.
@@ -2123,7 +2146,7 @@
             });
             if (mobile) {
                 slideDown($id("toolbar"), 500);
-                $id("menu").style.display = '';
+                showElement($id("menu"));
             }
         }, {once: true});
 
@@ -2150,8 +2173,8 @@
                 if (mobile) {
                     const menu = $id("menu");
                     if (showing) {
-                        $id("toolbar").style.display = '';
-                        menu.style.display = '';
+                        showElement($id("toolbar"));
+                        showElement(menu);
                     }
                     menu.style.top = (-elHeight(menu)-52) + 'px';
                     // Go to the story view.
@@ -2166,7 +2189,7 @@
                     $id("menu").style.display = 'none';
                     if (showing) {
                         // Display the side bars
-                        $id("tools_wrapper").style.display = '';
+                        showElement($id("tools_wrapper"));
                     }
                     qsa("#character_panel, #info_panel").forEach(
                         function(element) {
@@ -2174,8 +2197,8 @@
                         }
                     );
                 }
-                $id("title").style.display = '';
-                if (showing) $id("content_wrapper").style.display = '';
+                showElement($id("title"));
+                if (showing) showElement($id("content_wrapper"));
             }
         };
         window.addEventListener('resize', resize);
