@@ -1590,12 +1590,13 @@
         else vanishWaiters.push(cb);
     };
 
-    const TT_HIDDEN = 'opacity:0;transition:opacity 0.35s ease;pointer-events:none;';
     const TT_SHOWN = 'opacity:1;pointer-events:auto;';
 
     const teletypeHide = function(el) {
         el.classList.add('tt-unit');
-        el.style.cssText += TT_HIDDEN;
+        const fadeMs = window.dumpling.teletypeFading;
+        el.style.cssText += 'opacity:0;transition:opacity ' + fadeMs +
+                            'ms ease;pointer-events:none;';
     };
     const teletypeShow = function(el) {
         el.classList.add('tt-on');
@@ -2327,6 +2328,8 @@
     /* Milliseconds between each revealed character. 0 reveals everything
      * instantly (no animation). */
     window.dumpling.teletypeTiming = 13;
+    /* Milliseconds for the opacity fade-in of each revealed unit. */
+    window.dumpling.teletypeFading = 350;
 
     /* Set up the game when everything is loaded. */
     document.addEventListener('DOMContentLoaded', function() {
