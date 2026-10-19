@@ -1622,6 +1622,13 @@
                 teletypeHide(node);
                 units.push(node);
             } else {
+                // Lists hide their box too (so the empty outline doesn't
+                // show), but still reveal item by item.
+                const isList = tag === 'UL' || tag === 'OL';
+                if (isList) {
+                    teletypeHide(node);
+                    units.push(node);
+                }
                 for (const child of Array.from(node.childNodes)) {
                     teletypeCollect(child, units);
                 }
