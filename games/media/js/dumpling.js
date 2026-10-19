@@ -2415,7 +2415,7 @@
                 } else if (lastScrollPoint !== null) {
                     target = lastScrollPoint;
                 }
-                if (target !== null) window.scrollTo(0, target);
+                if (target !== null) smoothScrollTo(target);
             }
             fadeIn($id("tools_wrapper"), 2000);
             $id("title").style.cursor = "default";
