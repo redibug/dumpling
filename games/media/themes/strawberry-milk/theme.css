@@ -29,8 +29,6 @@ body {
 }
 #mid_panel {
     margin: 0 10.5em;
-    -webkit-filter: drop-shadow(0 8px 22px rgba(190,90,130,0.30));
-    filter: drop-shadow(0 8px 22px rgba(190,90,130,0.30));
 }
 
 /* The title block */
@@ -43,6 +41,8 @@ body {
     margin: 2.2em auto 1.1em auto;
     padding: 1.7em;
     border: 0.6em solid rgba(255,255,255,0.65);
+    -webkit-box-shadow: 0 6px 28px rgba(190,90,130,0.35);
+            box-shadow: 0 6px 28px rgba(190,90,130,0.35);
     cursor: pointer; /* Until we click to start. */
 }
 #title .label {
@@ -51,6 +51,8 @@ body {
     padding: 2.0em;
     margin: auto;
     max-width: 18em;
+    -webkit-box-shadow: 0 0 12px rgba(190,90,130,0.25);
+            box-shadow: 0 0 12px rgba(190,90,130,0.25);
     position: relative;
 }
 #title h1 {
@@ -116,6 +118,8 @@ body {
     padding: 2.8em;
     display: none; /* Shown by Javascript */
     overflow: auto;
+    -webkit-box-shadow: 0 6px 28px rgba(190,90,130,0.25);
+            box-shadow: 0 6px 28px rgba(190,90,130,0.25);
 }
 span.drop + p {
     text-indent: -0.4em;
@@ -230,14 +234,14 @@ img.float_left {
     margin: 0 auto;
     display: none; /* Shown by Javascript */
     z-index: 10;
-    -webkit-filter: drop-shadow(0 4px 14px rgba(190,90,130,0.28));
-    filter: drop-shadow(0 4px 14px rgba(190,90,130,0.28));
 }
 .tools {
     padding: 0.6em 0.9em;
     width: 8.9em;
     background: #fffafc url("../img/tools_bg.jpg") repeat left top;
     position: absolute;
+    -webkit-box-shadow: 0 4px 18px rgba(190,90,130,0.25);
+            box-shadow: 0 4px 18px rgba(190,90,130,0.25);
 }
 .tools p {
     font-size: 0.95em;
