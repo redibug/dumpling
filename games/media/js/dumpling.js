@@ -1572,6 +1572,7 @@
      */
     let teletypeState = null;
     let teletypePendingNodes = null;
+    let teletypeArmed = false;
 
     /* Tracks running vanish animations so teletype can wait for them. */
     let vanishCount = 0;
@@ -1604,6 +1605,11 @@
     /* Collects reveal units in document order. Headings and list items
      * become single units; everything else splits into characters. */
     const teletypeCollect = function(node, units) {
+        // Idempotent: never double-wrap already-prepared units.
+        if (node.nodeType === Node.ELEMENT_NODE &&
+            node.classList.contains('tt-unit')) {
+            return;
+        }
         if (node.nodeType === Node.TEXT_NODE) {
             if (!node.nodeValue) return;
             const frag = document.createDocumentFragment();
@@ -1652,7 +1658,6 @@
     };
 
     const teletypeFinish = function() {
-        console.log('[teletype] finish called at ' + Date.now());
         if (teletypeState && teletypeState.timer) {
             clearInterval(teletypeState.timer);
         }
@@ -1684,26 +1689,18 @@
     const teletypePump = function() {
         if (teletypeState && teletypeState.timer) return;
         if (!teletypeState) teletypeState = { chars: [], index: 0, timer: null };
-        const t0 = Date.now();
-        console.log('[teletype] pump started at ' + t0 +
-                    ', ' + teletypeState.chars.length + ' units queued');
         teletypeState.timer = setInterval(function() {
             if (!teletypeState) return;
-            const now = Date.now();
             // Reveal a couple of chars, or one whole block unit, per tick.
             let n = 0;
             while (n < 3 && teletypeState.index < teletypeState.chars.length) {
                 const unit = teletypeState.chars[teletypeState.index++];
                 teletypeShow(unit);
                 n++;
-                console.log('[teletype] revealed unit ' + teletypeState.index +
-                            '/' + teletypeState.chars.length +
-                            ' at +' + (now - t0) + 'ms');
                 // Block units (headings, list items) get their own tick.
                 if (unit.tagName && /^(H[1-6]|LI)$/.test(unit.tagName)) break;
             }
             if (teletypeState.index >= teletypeState.chars.length) {
-                console.log('[teletype] finished at +' + (Date.now() - t0) + 'ms');
                 teletypeFinish();
             }
         }, 40);
@@ -1736,7 +1733,7 @@
         else {
             insertNodes(element, appendMethod, output);
         }
-        if (interactive && window.dumpling.teletype &&
+        if (interactive && window.dumpling.teletype && teletypeArmed &&
             isVisible($id('content_wrapper'))) {
             // Hide immediately (reserving layout); the reveal itself
             // waits for scroll + vanish in endOutputTransaction.
@@ -2370,6 +2367,7 @@
 
         // Show the game when we click on the title.
         $id("title").addEventListener('click', function() {
+            teletypeArmed = true;
             qsa("#content_wrapper, #legal").forEach(function(element) {
                 fadeIn(element, 500);
             });
