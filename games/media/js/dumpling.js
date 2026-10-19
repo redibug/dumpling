@@ -1640,22 +1640,15 @@
                     teletypeHide(node);
                     units.push(node);
                 }
-                // Drop cap: first paragraph after a heading gets its
-                // first character marked. Skips turn separators.
+                // Drop cap: paragraph directly after a heading (or after
+                // a heading+image) gets its first character marked.
                 let dropCap = false;
                 if (tag === 'P') {
-                    let prev = node.previousElementSibling;
-                    // Skip HR separators.
-                    while (prev && prev.tagName === 'HR') {
-                        prev = prev.previousElementSibling;
-                    }
+                    const prev = node.previousElementSibling;
                     if (prev && /^H[1-6]$/.test(prev.tagName)) {
                         dropCap = true;
                     } else if (prev && prev.tagName === 'IMG') {
-                        let prev2 = prev.previousElementSibling;
-                        while (prev2 && prev2.tagName === 'HR') {
-                            prev2 = prev2.previousElementSibling;
-                        }
+                        const prev2 = prev.previousElementSibling;
                         if (prev2 && /^H[1-6]$/.test(prev2.tagName)) {
                             dropCap = true;
                         }
