@@ -1605,7 +1605,7 @@
 
     /* Collects reveal units in document order. Headings and list items
      * become single units; everything else splits into characters. */
-    const teletypeCollect = function(node, units) {
+    const teletypeCollect = function(node, units, ctx) {
         // Idempotent: never double-wrap already-prepared units.
         if (node.nodeType === Node.ELEMENT_NODE &&
             node.classList.contains('tt-unit')) {
@@ -1613,11 +1613,18 @@
         }
         if (node.nodeType === Node.TEXT_NODE) {
             if (!node.nodeValue) return;
+            // Skip whitespace-only nodes; splitting them creates empty
+            // spans that break selectors like h1 + p.
+            if (!node.nodeValue.trim()) return;
             const frag = document.createDocumentFragment();
             for (const ch of node.nodeValue) {
                 const span = document.createElement('span');
                 span.textContent = ch;
                 teletypeHide(span);
+                if (ctx && ctx.dropCap && ch.trim()) {
+                    span.classList.add('tt-dropcap');
+                    ctx.dropCap = false;
+                }
                 frag.appendChild(span);
                 units.push(span);
             }
@@ -1636,8 +1643,30 @@
                     teletypeHide(node);
                     units.push(node);
                 }
+                // Drop cap: first paragraph after a heading gets its
+                // first character marked. Skips turn separators.
+                let dropCap = false;
+                if (tag === 'P') {
+                    let prev = node.previousElementSibling;
+                    // Skip HR separators.
+                    while (prev && prev.tagName === 'HR') {
+                        prev = prev.previousElementSibling;
+                    }
+                    if (prev && /^H[1-6]$/.test(prev.tagName)) {
+                        dropCap = true;
+                    } else if (prev && prev.tagName === 'IMG') {
+                        let prev2 = prev.previousElementSibling;
+                        while (prev2 && prev2.tagName === 'HR') {
+                            prev2 = prev2.previousElementSibling;
+                        }
+                        if (prev2 && /^H[1-6]$/.test(prev2.tagName)) {
+                            dropCap = true;
+                        }
+                    }
+                }
+                const childCtx = dropCap ? {dropCap: true} : null;
                 for (const child of Array.from(node.childNodes)) {
-                    teletypeCollect(child, units);
+                    teletypeCollect(child, units, childCtx);
                 }
             }
         }
@@ -1648,7 +1677,7 @@
     const teletypePrepare = function(nodes) {
         const units = [];
         for (const node of nodes) {
-            teletypeCollect(node, units);
+            teletypeCollect(node, units, null);
         }
         // Ensure a click can always rescue hidden units, even if the
         // reveal timer never starts.
