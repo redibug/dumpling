@@ -2387,7 +2387,9 @@
             qsa("#content_wrapper, #legal").forEach(function(element) {
                 fadeIn(element, 500);
             });
-            if (window.dumpling.teletype) {
+            // On load, show the log instantly (no teletype). On a fresh
+            // start, teletype the first situation.
+            if (!wasLoaded && window.dumpling.teletype) {
                 teletypeStart(Array.from($id('content').childNodes));
             }
             // Jump to the first (fresh) or newest (loaded) situation.
