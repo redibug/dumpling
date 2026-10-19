@@ -1643,17 +1643,25 @@
         for (const node of nodes) {
             teletypeCollect(node, units);
         }
+        // Ensure a click can always rescue hidden units, even if the
+        // reveal timer never starts.
+        if (units.length) {
+            document.addEventListener('click', teletypeClickHandler, true);
+        }
         return units;
     };
 
     const teletypeFinish = function() {
-        if (!teletypeState) return;
-        if (teletypeState.timer) clearInterval(teletypeState.timer);
-        for (let i = teletypeState.index; i < teletypeState.chars.length; i++) {
-            teletypeShow(teletypeState.chars[i]);
+        if (teletypeState && teletypeState.timer) {
+            clearInterval(teletypeState.timer);
         }
+        // Reveal everything still hidden, including any units that were
+        // orphaned (hidden but never queued) by an interrupted flow.
+        const orphans = document.querySelectorAll('.tt-unit:not(.tt-on)');
+        for (const el of orphans) teletypeShow(el);
         document.removeEventListener('click', teletypeClickHandler, true);
         teletypeState = null;
+        teletypePendingNodes = null;
     };
 
     const teletypeClickHandler = function(event) {
@@ -1690,7 +1698,6 @@
                 teletypeFinish();
             }
         }, 40);
-        document.addEventListener('click', teletypeClickHandler, true);
     };
 
     /* Begins revealing already-prepared units. */
