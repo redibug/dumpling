@@ -200,7 +200,7 @@ a {
 }
 a.raw {
     padding-right: 14px;
-    background: transparent url("../../img/external_link.png") no-repeat right 4px;
+    background: transparent url("../img/external_link.png") no-repeat right 4px;
 }
 a:hover {
     color: #8c5069;
