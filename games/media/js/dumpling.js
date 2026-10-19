@@ -2104,8 +2104,8 @@
     // -----------------------------------------------------------------------
 
     /* Game authors pick a theme with `dumpling.theme = "name"`. Themes live
-       in media/themes/<name>/, each with theme.css, theme-mobile.css, an
-       img/ folder and an optional fonts/ folder. */
+       in media/themes/<name>/, with stylesheets in css/, images in img/,
+       and optional bundled fonts in fonts/. */
     const themeStylesheetBase = (function() {
         try {
             const src = document.currentScript && document.currentScript.src;
@@ -2124,12 +2124,12 @@
         const main = document.createElement('link');
         main.rel = 'stylesheet';
         main.media = 'screen';
-        main.href = themeStylesheetBase + name + '/theme.css';
+        main.href = themeStylesheetBase + name + '/css/theme.css';
         main.setAttribute('data-dumpling-theme', name);
         const mobile = document.createElement('link');
         mobile.rel = 'stylesheet';
         mobile.media = 'only screen and (max-width: 640px)';
-        mobile.href = themeStylesheetBase + name + '/theme-mobile.css';
+        mobile.href = themeStylesheetBase + name + '/css/theme-mobile.css';
         mobile.setAttribute('data-dumpling-theme', name);
         head.appendChild(main);
         head.appendChild(mobile);
