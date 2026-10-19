@@ -24,36 +24,10 @@
     // ignore them and skip down to the next section.]
     // -----------------------------------------------------------------------
 
-    /* Crockford's inherit function */
-    Function.prototype.inherits = function(Parent) {
-        var d = {}, p = (this.prototype = new Parent());
-        this.prototype.uber = function(name) {
-            if (!(name in d)) d[name] = 0;
-            var f, r, t = d[name], v = Parent.prototype;
-            if (t) {
-                while (t) {
-                    v = v.constructor.prototype;
-                    t -= 1;
-                }
-                f = v[name];
-            } else {
-                f = p[name];
-                if (f == this[name]) {
-                    f = v[name];
-                }
-            }
-            d[name] += 1;
-            r = f.apply(this, Array.prototype.slice.apply(arguments, [1]));
-            d[name] -= 1;
-            return r;
-        };
-        return this;
-    };
-
     // Feature detection
 
-    var hasLocalStorage = function() {
-        var hasStorage = false;
+    const hasLocalStorage = function() {
+        let hasStorage = false;
         try {
             hasStorage = ('localStorage' in window) &&
                 window.localStorage !== null &&
@@ -67,7 +41,7 @@
         return hasStorage;
     };
 
-    var isMobileDevice = function() {
+    const isMobileDevice = function() {
         return (navigator.userAgent.toLowerCase().search(
             /iphone|ipad|palm|blackberry|android/
         ) >= 0 || document.documentElement.clientWidth <= 640);
@@ -75,13 +49,14 @@
 
     // Assertion
 
-    var AssertionError = function(message) {
-        this.message = message;
-        this.name = AssertionError;
-    };
-    AssertionError.inherits(Error);
+    class AssertionError extends Error {
+        constructor(message) {
+            super(message);
+            this.name = "AssertionError";
+        }
+    }
 
-    var assert = function(expression, message) {
+    const assert = function(expression, message) {
         if (!expression) {
             throw new AssertionError(message);
         }
@@ -93,33 +68,33 @@
 
     /* getElementById shorthand. Ids used by the engine are restricted
      * to [a-z0-9-], so this is always safe. */
-    var $id = function(id) {
+    const $id = function(id) {
         return document.getElementById(id);
     };
 
     /* True if the node can be used as a query context (jQuery is
      * lenient about text nodes here, so are we). */
-    var isQueryable = function(node) {
+    const isQueryable = function(node) {
         return !!node && (node.nodeType === 1 ||
                           node.nodeType === 9 ||
                           node.nodeType === 11);
     };
 
     /* querySelector(All) shorthands. qsa returns a real array. */
-    var qs = function(selector, context) {
-        var ctx = context || document;
+    const qs = function(selector, context) {
+        const ctx = context || document;
         if (!isQueryable(ctx)) return null;
         return ctx.querySelector(selector);
     };
-    var qsa = function(selector, context) {
-        var ctx = context || document;
+    const qsa = function(selector, context) {
+        const ctx = context || document;
         if (!isQueryable(ctx)) return [];
         return Array.prototype.slice.call(ctx.querySelectorAll(selector));
     };
 
     /* Document-relative top of a node, like jQuery's .offset().top.
      * Returns 0 for non-elements, matching jQuery's fallback. */
-    var docTop = function(node) {
+    const docTop = function(node) {
         if (node && typeof node.getBoundingClientRect === 'function') {
             return node.getBoundingClientRect().top + window.scrollY;
         }
@@ -128,19 +103,19 @@
 
     /* Like jQuery's .attr(): returns undefined (not null) when the
      * attribute is missing, so option handling is unchanged. */
-    var attr = function(element, name) {
-        var value = element.getAttribute(name);
+    const attr = function(element, name) {
+        const value = element.getAttribute(name);
         return value === null ? undefined : value;
     };
 
     /* Content-box height of an element, like jQuery's .height(). */
-    var elHeight = function(element) {
-        var h = parseFloat(getComputedStyle(element).height);
+    const elHeight = function(element) {
+        const h = parseFloat(getComputedStyle(element).height);
         return isNaN(h) ? 0 : h;
     };
 
     /* True for text nodes containing only whitespace. */
-    var isWhitespaceText = function(node) {
+    const isWhitespaceText = function(node) {
         return node.nodeType === 3 && !(/[^\t\n\f\r ]/.test(node.nodeValue));
     };
 
@@ -156,10 +131,10 @@
      * Note: for exotic fragments jQuery also applies table-element
      * wrapping (its "wrapMap"); we don't. Write <table> wrappers
      * explicitly, as usual. */
-    var parseHTML = function(html) {
-        var template = document.createElement('template');
+    const parseHTML = function(html) {
+        const template = document.createElement('template');
         template.innerHTML = html;
-        var nodes = Array.prototype.slice.call(template.content.childNodes);
+        const nodes = Array.prototype.slice.call(template.content.childNodes);
         while (nodes.length > 0 && isWhitespaceText(nodes[0])) {
             nodes.shift();
         }
@@ -172,7 +147,7 @@
 
     /* Normalizes "Display Content" into an array of elements. Accepts
      * an HTML string, a single Element, or an array of Elements. */
-    var asElements = function(content) {
+    const asElements = function(content) {
         if (typeof content === 'string') return parseHTML(content);
         if (content instanceof Element) return [content];
         if (Array.isArray(content)) return content;
@@ -181,7 +156,7 @@
 
     /* Inserts nodes into a target, matching jQuery's append/prepend/
      * before/after/replaceWith. */
-    var insertNodes = function(target, method, nodes) {
+    const insertNodes = function(target, method, nodes) {
         switch (method) {
         case 'append':
             target.append.apply(target, nodes);
@@ -202,23 +177,23 @@
     };
 
     /* jQuery's :visible check, close enough for our UI toggles. */
-    var isVisible = function(element) {
+    const isVisible = function(element) {
         return getComputedStyle(element).display !== 'none';
     };
 
     /* Fade/slide helpers built on the Web Animations API, replacing
      * jQuery's fadeIn/fadeOut/slideDown/slideUp/animate. */
 
-    var fadeIn = function(element, ms, callback) {
+    const fadeIn = function(element, ms, callback) {
         element.style.display = '';
-        var anim = element.animate(
+        const anim = element.animate(
             [{opacity: 0}, {opacity: 1}], {duration: ms}
         );
         if (callback) anim.onfinish = callback;
     };
 
-    var fadeOut = function(element, ms, callback) {
-        var anim = element.animate(
+    const fadeOut = function(element, ms, callback) {
+        const anim = element.animate(
             [{opacity: 1}, {opacity: 0}],
             {duration: ms, fill: 'forwards'}
         );
@@ -229,11 +204,11 @@
         };
     };
 
-    var slideDown = function(element, ms, callback) {
+    const slideDown = function(element, ms, callback) {
         element.style.display = '';
         element.style.overflow = 'hidden';
-        var targetHeight = element.scrollHeight;
-        var anim = element.animate(
+        const targetHeight = element.scrollHeight;
+        const anim = element.animate(
             [{height: '0px'}, {height: targetHeight + 'px'}],
             {duration: ms, easing: 'ease'}
         );
@@ -247,16 +222,16 @@
 
     /* Fades an element out, then collapses its height, then removes
      * it. Matches jQuery's .animate({opacity:0}).slideUp(cb) chain. */
-    var fadeSlideUp = function(element, fadeMs, slideMs, callback) {
-        var fade = element.animate(
+    const fadeSlideUp = function(element, fadeMs, slideMs, callback) {
+        const fade = element.animate(
             [{opacity: 1}, {opacity: 0}],
             {duration: fadeMs, fill: 'forwards'}
         );
         fade.onfinish = function() {
             fade.cancel();
             element.style.overflow = 'hidden';
-            var startHeight = element.scrollHeight;
-            var slide = element.animate(
+            const startHeight = element.scrollHeight;
+            const slide = element.animate(
                 [{height: startHeight + 'px'}, {height: '0px'}],
                 {duration: slideMs, easing: 'ease'}
             );
@@ -269,17 +244,17 @@
     };
 
     /* Animates an element's width (used for quality progress bars). */
-    var animateWidth = function(element, toPx, ms, callback) {
-        var from = getComputedStyle(element).width;
-        var anim = element.animate(
+    const animateWidth = function(element, toPx, ms, callback) {
+        const from = getComputedStyle(element).width;
+        const anim = element.animate(
             [{width: from}, {width: toPx + 'px'}], {duration: ms}
         );
         if (callback) anim.onfinish = callback;
     };
 
     /* Animates an element's top offset (used for the mobile menu). */
-    var animateTop = function(element, toPx, ms) {
-        var from = getComputedStyle(element).top;
+    const animateTop = function(element, toPx, ms) {
+        const from = getComputedStyle(element).top;
         element.animate(
             [{top: from}, {top: toPx + 'px'}],
             {duration: ms, fill: 'forwards'}
@@ -287,7 +262,7 @@
     };
 
     /* Smooth scroll, replacing $("body, html").animate({scrollTop}). */
-    var smoothScrollTo = function(y) {
+    const smoothScrollTo = function(y) {
         window.scrollTo({top: y, behavior: 'smooth'});
     };
 
@@ -307,7 +282,7 @@
      * can give those functions in the opts parameter. The opts
      * parameter is an object. So you could write:
      *
-     *    var situation = Situation({
+     *    const situation = new Situation({
      *        enter: function(character, system, from) {
      *            ... your implementation ...
      *        }
@@ -369,100 +344,102 @@
      *     situations are selected implicitly, the results are ordered
      *     by increasing displayOrder.
      */
-    var Situation = function(opts) {
-        if (opts) {
-            if (opts.enter) this._enter = opts.enter;
-            if (opts.act) this._act = opts.act;
-            if (opts.exit) this._exit = opts.exit;
+    class Situation {
+        constructor(opts) {
+            if (opts) {
+                if (opts.enter) this._enter = opts.enter;
+                if (opts.act) this._act = opts.act;
+                if (opts.exit) this._exit = opts.exit;
 
-            // Options related to this situation being automatically
-            // selected and displayed in a list of options.
-            this._optionText = opts.optionText;
-            this._canView = opts.canView || true;
-            this._canChoose = opts.canChoose || true;
-            this._priority = (opts.priority !== undefined) ? opts.priority : 1;
-            this._frequency =
-                (opts.frequency !== undefined) ? opts.frequency : 1;
-            this._displayOrder =
-                (opts.displayOrder !== undefined) ? opts.displayOrder : 1;
+                // Options related to this situation being automatically
+                // selected and displayed in a list of options.
+                this._optionText = opts.optionText;
+                this._canView = opts.canView || true;
+                this._canChoose = opts.canChoose || true;
+                this._priority = (opts.priority !== undefined) ? opts.priority : 1;
+                this._frequency =
+                    (opts.frequency !== undefined) ? opts.frequency : 1;
+                this._displayOrder =
+                    (opts.displayOrder !== undefined) ? opts.displayOrder : 1;
 
-            // Tag are not stored with an underscore, because they are
-            // accessed directy. They should not be context sensitive
-            // (use the canView function to do context sensitive
-            // manipulation).
-            if (opts.tags !== undefined) {
-                if (Array.isArray(opts.tags)) {
-                    this.tags = opts.tags;
+                // Tag are not stored with an underscore, because they are
+                // accessed directy. They should not be context sensitive
+                // (use the canView function to do context sensitive
+                // manipulation).
+                if (opts.tags !== undefined) {
+                    if (Array.isArray(opts.tags)) {
+                        this.tags = opts.tags;
+                    } else {
+                        this.tags = opts.tags.split(/[ \t,]+/);
+                    }
                 } else {
-                    this.tags = opts.tags.split(/[ \t,]+/);
+                    this.tags = [];
                 }
             } else {
+                this._canView = true;
+                this._canChoose = true;
+                this._priority = 1;
+                this._frequency = 1;
+                this._displayOrder = 1;
                 this.tags = [];
             }
-        } else {
-            this._canView = true;
-            this._canChoose = true;
-            this._priority = 1;
-            this._frequency = 1;
-            this._displayOrder = 1;
-            this.tags = [];
         }
-    };
-    /* A function that takes action when we enter a situation. The
-     * last parameter indicates the situation we have just left: it
-     * may be null if this is the starting situation. Unlike the
-     * exit() method, this method cannot prevent the transition
-     * happening: its return value is ignored. */
-    Situation.prototype.enter = function(character, system, from) {
-        if (this._enter) this._enter(character, system, from);
-    };
-    /* A function that takes action when we carry out some action in a
-     * situation that isn't intended to lead to a new situation. */
-    Situation.prototype.act = function(character, system, action) {
-        if (this._act) this._act(character, system, action);
-    };
-    /* A function that takes action when we exit a situation. The last
-     * parameter indicates the situation we are going to. */
-    Situation.prototype.exit = function(character, system, to) {
-        if (this._exit) this._exit(character, system, to);
-    };
-    /* Determines whether this situation should be contained within a
-     * list of options generated automatically by the given
-     * situation. */
-    Situation.prototype.canView = function(character, system, situation) {
-        if (typeof this._canView === 'function') {
-            return this._canView(character, system, situation);
-        } else {
-            return this._canView;
+        /* A function that takes action when we enter a situation. The
+         * last parameter indicates the situation we have just left: it
+         * may be null if this is the starting situation. Unlike the
+         * exit() method, this method cannot prevent the transition
+         * happening: its return value is ignored. */
+        enter(character, system, from) {
+            if (this._enter) this._enter(character, system, from);
         }
-    };
-    /* Determines whether this situation should be clickable within a
-     * list of options generated automatically by the given situation. */
-    Situation.prototype.canChoose = function(character, system, situation) {
-        if (typeof this._canChoose === 'function') {
-            return this._canChoose(character, system, situation);
-        } else {
-            return this._canChoose;
+        /* A function that takes action when we carry out some action in a
+         * situation that isn't intended to lead to a new situation. */
+        act(character, system, action) {
+            if (this._act) this._act(character, system, action);
         }
-    };
-    /* Returns the text that should be used to display this situation
-     * in an automatically generated list of choices. */
-    Situation.prototype.optionText = function(character, system, situation) {
-        if (typeof this._optionText === 'function') {
-            return this._optionText(character, system, situation);
-        } else {
-            return this._optionText;
+        /* A function that takes action when we exit a situation. The last
+         * parameter indicates the situation we are going to. */
+        exit(character, system, to) {
+            if (this._exit) this._exit(character, system, to);
         }
-    };
-    /* Returns the priority, frequency and displayOrder for this situation,
-     * when being selected using `system.getSituationIdChoices`. */
-    Situation.prototype.choiceData = function(character, system, situation) {
-        return {
-            priority: this._priority,
-            frequency: this._frequency,
-            displayOrder: this._displayOrder
-        };
-    };
+        /* Determines whether this situation should be contained within a
+         * list of options generated automatically by the given
+         * situation. */
+        canView(character, system, situation) {
+            if (typeof this._canView === 'function') {
+                return this._canView(character, system, situation);
+            } else {
+                return this._canView;
+            }
+        }
+        /* Determines whether this situation should be clickable within a
+         * list of options generated automatically by the given situation. */
+        canChoose(character, system, situation) {
+            if (typeof this._canChoose === 'function') {
+                return this._canChoose(character, system, situation);
+            } else {
+                return this._canChoose;
+            }
+        }
+        /* Returns the text that should be used to display this situation
+         * in an automatically generated list of choices. */
+        optionText(character, system, situation) {
+            if (typeof this._optionText === 'function') {
+                return this._optionText(character, system, situation);
+            } else {
+                return this._optionText;
+            }
+        }
+        /* Returns the priority, frequency and displayOrder for this situation,
+         * when being selected using `system.getSituationIdChoices`. */
+        choiceData(character, system, situation) {
+            return {
+                priority: this._priority,
+                frequency: this._frequency,
+                displayOrder: this._displayOrder
+            };
+        }
+    }
 
     /* A simple situation has a block of content that it displays when
      * the situation is entered. The content must be valid "Display
@@ -508,58 +485,58 @@
      * The remaining options in the `opts` parameter are the same as for
      * the base Situation.
      */
-    var SimpleSituation = function(content, opts) {
-        Situation.call(this, opts);
-        this.content = content;
-        this.heading = opts && opts.heading;
-        this.actions = opts && opts.actions;
+    class SimpleSituation extends Situation {
+        constructor(content, opts) {
+            super(opts);
+            this.content = content;
+            this.heading = opts && opts.heading;
+            this.actions = opts && opts.actions;
 
-        this.choices = opts && opts.choices;
-        this.minChoices = opts && opts.minChoices;
-        this.maxChoices = opts && opts.maxChoices;
-    };
-    SimpleSituation.inherits(Situation);
-    SimpleSituation.prototype.enter = function(character, system, from) {
-        if (this.heading) {
-            if (typeof this.heading === 'function') {
-                system.writeHeading(this.heading());
-            } else {
-                system.writeHeading(this.heading);
+            this.choices = opts && opts.choices;
+            this.minChoices = opts && opts.minChoices;
+            this.maxChoices = opts && opts.maxChoices;
+        }
+        enter(character, system, from) {
+            if (this.heading) {
+                if (typeof this.heading === 'function') {
+                    system.writeHeading(this.heading());
+                } else {
+                    system.writeHeading(this.heading);
+                }
+            }
+            if (this._enter) this._enter(character, system, from);
+            if (this.content) {
+                if (typeof this.content === 'function') {
+                    system.write(this.content());
+                } else {
+                    system.write(this.content);
+                }
+            }
+            if (this.choices) {
+                const choices = system.getSituationIdChoices(this.choices,
+                                                             this.minChoices,
+                                                             this.maxChoices);
+                system.writeChoices(choices);
             }
         }
-        if (this._enter) this._enter(character, system, from);
-        if (this.content) {
-            if (typeof this.content === 'function') {
-                system.write(this.content());
+        act(character, system, action) {
+            const response = this.actions[action];
+            try {
+                response(character, system, action);
+            } catch (err) {
+                if (response) system.write(response);
+            }
+            if (this._act) this._act(character, system, action);
+        }
+        optionText(character, system, sitn) {
+            const parentResult = super.optionText(character, system, sitn);
+            if (parentResult === undefined) {
+                return this.heading;
             } else {
-                system.write(this.content);
+                return parentResult;
             }
         }
-        if (this.choices) {
-            var choices = system.getSituationIdChoices(this.choices,
-                                                       this.minChoices,
-                                                       this.maxChoices);
-            system.writeChoices(choices);
-        }
-    };
-    SimpleSituation.prototype.act = function(character, system, action) {
-        var response = this.actions[action];
-        try {
-            response(character, system, action);
-        } catch (err) {
-            if (response) system.write(response);
-        }
-        if (this._act) this._act(character, system, action);
-    };
-    SimpleSituation.prototype.optionText = function(character, system, sitn) {
-        var parentResult = Situation.prototype.optionText.call(this, character,
-                                                               system, sitn);
-        if (parentResult === undefined) {
-            return this.heading;
-        } else {
-            return parentResult;
-        }
-    };
+    }
 
     /* Instances of this class define the qualities that characters
      * may possess. The title should be a string, and can contain
@@ -590,63 +567,59 @@
      * sub-types of QualityDefinition are given that format their
      * values in different ways.
      */
-    var QualityDefinition = function(title, opts) {
-        var myOpts = Object.assign({
-            priority: title,
-            group: null,
-            extraClasses: null
-        }, opts);
-        this.title = title;
-        this.priority = myOpts.priority;
-        this.group = myOpts.group;
-        this.extraClasses = myOpts.extraClasses;
-    };
-    /* Formats the value (which is always numeric) into the value to
-     * be displayed. The result should be HTML (but no tags are
-     * needed). If null is returned, then the quality definition will
-     * not be displayed, so if you want an empty value return an empty
-     * string. */
-    QualityDefinition.prototype.format = function(character, value) {
-        return value.toString();
-    };
+    class QualityDefinition {
+        constructor(title, opts) {
+            const myOpts = Object.assign({
+                priority: title,
+                group: null,
+                extraClasses: null
+            }, opts);
+            this.title = title;
+            this.priority = myOpts.priority;
+            this.group = myOpts.group;
+            this.extraClasses = myOpts.extraClasses;
+        }
+        /* Formats the value (which is always numeric) into the value to
+         * be displayed. The result should be HTML (but no tags are
+         * needed). If null is returned, then the quality definition will
+         * not be displayed, so if you want an empty value return an empty
+         * string. */
+        format(character, value) {
+            return value.toString();
+        }
+    }
 
     /* A quality that is always displayed as the nearest integer of
      * the current value, rounded down. Options (in the opts
      * parameter) are the same as for QualityDefinition. */
-    var IntegerQuality = function(title, opts) {
-        QualityDefinition.call(this, title, opts);
-    };
-    IntegerQuality.inherits(QualityDefinition);
-    IntegerQuality.prototype.format = function(character, value) {
-        return Math.floor(value).toString();
-    };
+    class IntegerQuality extends QualityDefinition {
+        format(character, value) {
+            return Math.floor(value).toString();
+        }
+    }
 
     /* A quality that displays as an IntegerQuality, unless it is
      * zero, when it is omitted. Options (in the opts * parameter) are
      * the same as for QualityDefinition. */
-    var NonZeroIntegerQuality = function(title, opts) {
-        IntegerQuality.call(this, title, opts);
-    };
-    NonZeroIntegerQuality.inherits(IntegerQuality);
-    NonZeroIntegerQuality.prototype.format = function(character, value) {
-        if (value === 0) {
-            return null;
-        } else {
-            return IntegerQuality.prototype.format.call(
-                this, character, value
-            );
+    class NonZeroIntegerQuality extends IntegerQuality {
+        format(character, value) {
+            if (value === 0) {
+                return null;
+            } else {
+                return super.format(character, value);
+            }
         }
-    };
+    }
 
     /* A quality that displays its full numeric value, including
      * decimal component. This is actually a trivial wrapper around
      * the QualityDefinition class, which formats in the same
      * way. Options (in the opts parameter) are the same as for
      * QualityDefinition. */
-    var NumericQuality = function(title, opts) {
-        QualityDefinition.call(this, title, opts);
-    };
-    NumericQuality.inherits(QualityDefinition);
+    class NumericQuality extends QualityDefinition {
+        // Inherits everything; the default constructor passes
+        // (title, opts) through to QualityDefinition.
+    }
 
     /* A quality that displays its values as one of a set of
      * words. The quality value is first rounded down to the nearest
@@ -671,31 +644,32 @@
      *
      * Other options are the same as for QualityDefinition.
      */
-    var WordScaleQuality = function(title, values, opts) {
-        var myOpts = Object.assign({
-            offset: null,
-            useBonuses: true
-        }, opts);
-        QualityDefinition.call(this, title, opts);
-        this.values = values;
-        this.offset = myOpts.offset;
-        this.useBonuses = myOpts.useBonuses;
-    };
-    WordScaleQuality.inherits(QualityDefinition);
-    WordScaleQuality.prototype.format = function(character, value) {
-        var val = Math.floor(value - this.offset);
-        var mod = "";
-        if (val < 0) {
-            mod = val.toString();
-            val = 0;
-        } else if (val >= this.values.length) {
-            mod = "+" + (val - this.values.length + 1).toString();
-            val = this.values.length - 1;
+    class WordScaleQuality extends QualityDefinition {
+        constructor(title, values, opts) {
+            const myOpts = Object.assign({
+                offset: null,
+                useBonuses: true
+            }, opts);
+            super(title, opts);
+            this.values = values;
+            this.offset = myOpts.offset;
+            this.useBonuses = myOpts.useBonuses;
         }
-        if (!this.useBonuses) mod = "";
-        if (this.values[val] === null) return null;
-        return this.values[val] + mod; // Type coercion
-    };
+        format(character, value) {
+            let val = Math.floor(value - this.offset);
+            let mod = "";
+            if (val < 0) {
+                mod = val.toString();
+                val = 0;
+            } else if (val >= this.values.length) {
+                mod = "+" + (val - this.values.length + 1).toString();
+                val = this.values.length - 1;
+            }
+            if (!this.useBonuses) mod = "";
+            if (this.values[val] === null) return null;
+            return this.values[val] + mod; // Type coercion
+        }
+    }
 
     /* A specialization of WordScaleQuality that uses the FUDGE RPG's
      * adjective scale (from 'terrible' at -3 to 'superb' at +3). The
@@ -706,14 +680,15 @@
      * is more common (such as Health) could have an offset of -5 so
      * everyone starts with 'great'.
      */
-    var FudgeAdjectivesQuality = function(title, opts) {
-        WordScaleQuality.call(this, title, [
-            "terrible".l(), "poor".l(), "mediocre".l(),
-            "fair".l(), "good".l(), "great".l(), "superb".l()
-        ], opts);
-        if (!('offset' in opts)) this.offset = -3;
-    };
-    FudgeAdjectivesQuality.inherits(WordScaleQuality);
+    class FudgeAdjectivesQuality extends WordScaleQuality {
+        constructor(title, opts) {
+            super(title, [
+                "terrible".l(), "poor".l(), "mediocre".l(),
+                "fair".l(), "good".l(), "great".l(), "superb".l()
+            ], opts);
+            if (!('offset' in opts)) this.offset = -3;
+        }
+    }
 
     /* An boolean quality that removes itself from the quality list if
      * it has a zero value. If it has a non-zero value, its value
@@ -721,18 +696,19 @@
      * string to display as the `onDisplay` parameter of the opts
      * object. Other options (in the opts parameter) are the same as
      * for QualityDefinition. */
-    var OnOffQuality = function(title, opts) {
-        var myOpts = Object.assign({
-            onDisplay: ""
-        }, opts);
-        QualityDefinition.call(this, title, opts);
-        this.onDisplay = myOpts.onDisplay;
-    };
-    OnOffQuality.inherits(QualityDefinition);
-    OnOffQuality.prototype.format = function(character, value) {
-        if (value) return this.onDisplay;
-        else return null;
-    };
+    class OnOffQuality extends QualityDefinition {
+        constructor(title, opts) {
+            const myOpts = Object.assign({
+                onDisplay: ""
+            }, opts);
+            super(title, opts);
+            this.onDisplay = myOpts.onDisplay;
+        }
+        format(character, value) {
+            if (value) return this.onDisplay;
+            else return null;
+        }
+    }
 
     /* A boolean quality that has different output text for zero or
      * non-zero quality values. Unlike OnOffQuality, this definition
@@ -742,33 +718,36 @@
      * used to display true and false values. If not given, these
      * default to 'yes' and 'no'.
      */
-    var YesNoQuality = function(title, opts) {
-        var myOpts = Object.assign({
-            yesDisplay: "yes".l(),
-            noDisplay: "no".l()
-        }, opts);
-        QualityDefinition.call(this, title, opts);
-        this.yesDisplay = myOpts.yesDisplay;
-        this.noDisplay = myOpts.noDisplay;
-    };
-    YesNoQuality.inherits(QualityDefinition);
-    YesNoQuality.prototype.format = function(character, value) {
-        if (value) return this.yesDisplay;
-        else return this.noDisplay;
-    };
+    class YesNoQuality extends QualityDefinition {
+        constructor(title, opts) {
+            const myOpts = Object.assign({
+                yesDisplay: "yes".l(),
+                noDisplay: "no".l()
+            }, opts);
+            super(title, opts);
+            this.yesDisplay = myOpts.yesDisplay;
+            this.noDisplay = myOpts.noDisplay;
+        }
+        format(character, value) {
+            if (value) return this.yesDisplay;
+            else return this.noDisplay;
+        }
+    }
 
     /* Defines a group of qualities that should be displayed together,
      * under the given optional title. These should be defined in the
      * `undum.game.qualityGroups` parameter. */
-    var QualityGroup = function(title, opts) {
-        var myOpts = Object.assign({
-            priority: title,
-            extraClasses: null
-        }, opts);
-        this.title = title;
-        this.priority = myOpts.priority;
-        this.extraClasses = myOpts.extraClasses;
-    };
+    class QualityGroup {
+        constructor(title, opts) {
+            const myOpts = Object.assign({
+                priority: title,
+                extraClasses: null
+            }, opts);
+            this.title = title;
+            this.priority = myOpts.priority;
+            this.extraClasses = myOpts.extraClasses;
+        }
+    }
 
 
     // -----------------------------------------------------------------------
@@ -779,330 +758,329 @@
      * functions of each situation. It is used to interact with the
      * UI.
      */
-    var System = function() {
-        this.rnd = null;
-        this.options = {
-          all_links_once: true,
-          mobile_hide_speed: 500,
-          slide_up_speed: 500,
-          fade_speed: 1500,
-          progress_bar_speed: 1000
-        }
-        this.time = 0;
-    };
-
-    /* Removes all content from the page, clearing the main content area.
-     *
-     * If an elementSelector is given, then only that selector will be
-     * cleared. Note that all content from the cleared element is removed,
-     * but the element itself remains, ready to be filled again using
-     * System.write.
-     */
-    System.prototype.clearContent = function(elementSelector) {
-        var element = null;
-        if (elementSelector) element = qs(elementSelector);
-        if (!element) element = $id("content");
-        element.replaceChildren();
-    };
-
-    /* Outputs regular content to the page. The content supplied must
-     * be valid "Display Content".
-     *
-     * "Display Content" is any HTML string that begins with a HTML
-     * start tag, ends with either an end or a closed tag, and is a
-     * valid and self-contained snippet of HTML. Note that the string
-     * doesn't have to consist of only one HTML tag. You could have
-     * several paragraphs, for example, as long as the content starts
-     * with the <p> of the first paragraph, and ends with the </p> of
-     * the last. So "<p>Foo</p><img src='bar'>" is valid, but "foo<img
-     * src='bar'>" is not.
-     *
-     * The content goes to the end of the page, unless you supply the
-     * optional selector argument. If you do, the content appears
-     * after the element that matches that selector.
-     */
-    System.prototype.write = function(content, elementSelector) {
-        doWrite(content, elementSelector, 'append', 'after');
-    };
-
-    /* Outputs the given content in a heading on the page. The content
-     * supplied must be valid "Display Content".
-     *
-     * The content goes to the end of the page, unless you supply the
-     * optional selector argument. If you do, the content appears
-     * after the element that matches that selector.
-     */
-    System.prototype.writeHeading = function(headingContent, elementSelector) {
-        var heading = document.createElement("h1");
-        heading.innerHTML = headingContent;
-        doWrite(heading, elementSelector, 'append', 'after');
-    };
-
-    /* Outputs regular content to the page. The content supplied must
-     * be valid "Display Content".
-     *
-     * The content goes to the beginning of the page, unless you
-     * supply the optional selector argument. If you do, the content
-     * appears after the element that matches that selector.
-     */
-    System.prototype.writeBefore = function(content, elementSelector) {
-        doWrite(content, elementSelector, 'prepend', 'before');
-    };
-
-    /* Outputs regular content to the page. The content supplied must
-     * be valid "Display Content".
-     *
-     * When a selector is not specified, this behaves identically to
-     * System.prototype.write. If you supply a selector, the content
-     * appears as a child node at the end of the content of the
-     * element that matches that selector.
-     */
-
-    System.prototype.writeInto = function(content, elementSelector) {
-        doWrite(content, elementSelector, 'append', 'append');
-    };
-
-    /* Replaces content with the content supplied, which must be valid
-     * "Display Content".
-     *
-     * When a selector is not specified, this replaces the entire
-     * content of the page. Otherwise, it replaces the element matched
-     * with the selector. This replaces the entire element, including
-     * the matched tags, so ideally the content supplied should fit
-     * in its place in the DOM with the same kind of display element.
-     */
-
-    System.prototype.replaceWith = function(content, elementSelector) {
-        doWrite(content, elementSelector, 'replaceWith', 'replaceWith');
-    };
-
-    /* Carries out the given situation change or action, as if it were
-     * in a link that has been clicked. This allows you to do
-     * procedural transitions. You might have an action that builds up
-     * the character's strength, and depletes their magic. When the
-     * magic is all gone, you can force a situation change by calling
-     * this method. */
-    System.prototype.doLink = function(code) {
-        processLink(code);
-    };
-
-    /* Turns any links that target the given href into plain
-     * text. This can be used to remove action options when an action
-     * is no longer available. It is used automatically when you give
-     * a link the 'once' class. */
-    System.prototype.clearLinks = function(code) {
-        qsa("a[href='" + code + "']").forEach(function(a) {
-            var span = document.createElement("span");
-            span.className = "ex_link";
-            span.innerHTML = a.innerHTML;
-            a.replaceWith(span);
-        });
-    };
-
-    /* Given a list of situation ids, this outputs a standard option
-     * block with the situation choices in the given order.
-     *
-     * The contents of each choice will be a link to the situation,
-     * the text of the link will be given by the situation's
-     * outputText property. Note that the canChoose function is
-     * called, and if it returns false, then the text will appear, but
-     * the link will not be clickable.
-     *
-     * Although canChoose is honored, canView and displayOrder are
-     * not. If you need to honor these, you should either do so
-     * manually, ot else use the `getSituationIdChoices` method to
-     * return an ordered list of valid viewable situation ids.
-     */
-    System.prototype.writeChoices = function(listOfIds, elementSelector) {
-        if (listOfIds.length === 0) return;
-
-        var currentSituation = getCurrentSituation();
-        var options = document.createElement("ul");
-        options.className = "options";
-        for (var i = 0; i < listOfIds.length; ++i) {
-            var situationId = listOfIds[i];
-            var situation = game.situations[situationId];
-            assert(situation, "unknown_situation".l({id:situationId}));
-            if (situation == currentSituation)
-            {
-                continue;
+    class System {
+        constructor() {
+            this.rnd = null;
+            this.options = {
+              all_links_once: true,
+              mobile_hide_speed: 500,
+              slide_up_speed: 500,
+              fade_speed: 1500,
+              progress_bar_speed: 1000
             }
-
-            var optionText = situation.optionText(character, this,
-                                                  currentSituation);
-            if (!optionText) optionText = "choice".l({number:i+1});
-            var option = document.createElement("li");
-            var a;
-            if (situation.canChoose(character, this, currentSituation)) {
-                a = document.createElement("a");
-                a.setAttribute("href", situationId);
-            } else {
-                a = document.createElement("span");
-            }
-            a.textContent = optionText;
-            option.appendChild(a);
-            options.appendChild(option);
-        }
-        doWrite(options, elementSelector, 'append', 'after');
-    };
-
-    /* Returns a list of situation ids to choose from, given a set of
-     * specifications.
-     *
-     * This function is a complex and powerful way of compiling
-     * implicit situation choices. You give it a list of situation ids
-     * and situation tags (if a single id or tag is needed just that
-     * string can be given, it doesn't need to be wrapped in a
-     * list). Tags should be prefixed with a hash # to differentiate
-     * them from situation ids. The function then considers all
-     * matching situations in descending priority order, calling their
-     * canView functions and filtering out any that should not be
-     * shown, given the current state. Without additional parameters
-     * the function returns a list of the situation ids at the highest
-     * level of priority that has any valid results. So, for example,
-     * if a tag #places matches three situations, one with priority 2,
-     * and two with priority 3, and all of them can be viewed in the
-     * current context, then only the two with priority 3 will be
-     * returned. This allows you to have high-priority situations that
-     * trump any lower situations when they are valid, such as
-     * situations that force the player to go to one destination if
-     * the player is out of money, for example.
-     *
-     * If a minChoices value is given, then the function will attempt
-     * to return at least that many results. If not enough results are
-     * available at the highest priority, then lower priorities will
-     * be considered in turn, until enough situations are found. In
-     * the example above, if we had a minChoices of three, then all
-     * three situations would be returned, even though they have
-     * different priorities. If you need to return all valid
-     * situations, regardless of their priorities, set minChoices to a
-     * large number, such as `Number.MAX_VALUE`, and leave maxChoices
-     * undefined.
-     *
-     * If a maxChoices value is given, then the function will not
-     * return any more than the given number of results. If there are
-     * more than this number of results possible, then the highest
-     * priority resuls will be guaranteed to be returned, but the
-     * lowest priority group will have to fight it out for the
-     * remaining places. In this case, a random sample is chosen,
-     * taking into account the frequency of each situation. So a
-     * situation with a frequency of 100 will be chosen 100 times more
-     * often than a situation with a frequency of 1, if there is one
-     * space available. Often these frequencies have to be taken as a
-     * guideline, and the actual probabilities will only be
-     * approximate. Consider three situations with frequencies of 1,
-     * 1, 100, competing for two spaces. The 100-frequency situation
-     * will be chosen almost every time, but for the other space, one
-     * of the 1-frequency situations must be chosen. So the actual
-     * probabilities will be roughly 50%, 50%, 100%. When selecting
-     * more than one result, frequencies can only be a guide.
-     *
-     * Before this function returns its result, it sorts the
-     * situations in increasing order of their displayOrder values.
-     */
-    System.prototype.getSituationIdChoices = function(listOfOrOneIdsOrTags,
-                                                      minChoices, maxChoices)
-    {
-        var datum;
-        var i;
-
-        // First check if we have a single string for the id or tag.
-        if (typeof listOfOrOneIdsOrTags === 'string') {
-            listOfOrOneIdsOrTags = [listOfOrOneIdsOrTags];
+            this.time = 0;
         }
 
-        // First we build a list of all candidate ids.
-        var allIds = {};
-        for (i = 0; i < listOfOrOneIdsOrTags.length; ++i) {
-            var tagOrId = listOfOrOneIdsOrTags[i];
-            if (tagOrId.substr(0, 1) == '#') {
-                var ids = getSituationIdsWithTag(tagOrId.substr(1));
-                for (var j = 0; j < ids.length; ++j) {
-                    allIds[ids[j]] = true;
-                }
-            } else {
-                allIds[tagOrId] = true;
-            }
+        /* Removes all content from the page, clearing the main content area.
+         *
+         * If an elementSelector is given, then only that selector will be
+         * cleared. Note that all content from the cleared element is removed,
+         * but the element itself remains, ready to be filled again using
+         * System.write.
+         */
+        clearContent(elementSelector) {
+            let element = null;
+            if (elementSelector) element = qs(elementSelector);
+            if (!element) element = $id("content");
+            element.replaceChildren();
         }
 
-        // Filter out anything that can't be viewed right now.
-        var currentSituation = getCurrentSituation();
-        var viewableSituationData = [];
-        for (var situationId in allIds) {
-            var situation = game.situations[situationId];
-            assert(situation, "unknown_situation".l({id:situationId}));
-
-            if (situation.canView(character, system, currentSituation)) {
-                // While we're here, get the selection data.
-                var viewableSituationDatum =
-                    situation.choiceData(character, system, currentSituation);
-                viewableSituationDatum.id = situationId;
-                viewableSituationData.push(viewableSituationDatum);
-            }
+        /* Outputs regular content to the page. The content supplied must
+         * be valid "Display Content".
+         *
+         * "Display Content" is any HTML string that begins with a HTML
+         * start tag, ends with either an end or a closed tag, and is a
+         * valid and self-contained snippet of HTML. Note that the string
+         * doesn't have to consist of only one HTML tag. You could have
+         * several paragraphs, for example, as long as the content starts
+         * with the <p> of the first paragraph, and ends with the </p> of
+         * the last. So "<p>Foo</p><img src='bar'>" is valid, but "foo<img
+         * src='bar'>" is not.
+         *
+         * The content goes to the end of the page, unless you supply the
+         * optional selector argument. If you do, the content appears
+         * after the element that matches that selector.
+         */
+        write(content, elementSelector) {
+            doWrite(content, elementSelector, 'append', 'after');
         }
 
-        // Then we sort in descending priority order.
-        viewableSituationData.sort(function(a, b) {
-            return b.priority - a.priority;
-        });
-
-        var committed = [];
-        var candidatesAtLastPriority = [];
-        var lastPriority;
-        // In descending priority order.
-        for (i = 0; i < viewableSituationData.length; ++i) {
-            datum = viewableSituationData[i];
-            if (datum.priority != lastPriority) {
-                if (lastPriority !== undefined) {
-                    // We've dropped a priority group, see if we have enough
-                    // situations so far, and stop if we do.
-                    if (minChoices === undefined || i >= minChoices) break;
-                }
-                // Continue to acccumulate more options.
-                committed.push.apply(committed, candidatesAtLastPriority);
-                candidatesAtLastPriority = [];
-                lastPriority = datum.priority;
-            }
-            candidatesAtLastPriority.push(datum);
+        /* Outputs the given content in a heading on the page. The content
+         * supplied must be valid "Display Content".
+         *
+         * The content goes to the end of the page, unless you supply the
+         * optional selector argument. If you do, the content appears
+         * after the element that matches that selector.
+         */
+        writeHeading(headingContent, elementSelector) {
+            const heading = document.createElement("h1");
+            heading.innerHTML = headingContent;
+            doWrite(heading, elementSelector, 'append', 'after');
         }
 
-        // So the values in committed we're committed to, because without
-        // them we wouldn't hit our minimum. But those in
-        // candidatesAtLastPriority might take us over our maximum, so
-        // figure out how many we should choose.
-        var totalChoices = committed.length + candidatesAtLastPriority.length;
-        if (maxChoices === undefined || maxChoices >= totalChoices) {
-            // We can use all the choices.
-            committed.push.apply(committed, candidatesAtLastPriority);
-        } else if (maxChoices >= committed.length) {
-            // We can only use the commited ones.
-            // NO-OP
-        } else {
-            // We have to sample the candidates, using their relative frequency.
-            var candidatesToInclude = maxChoices - committed.length;
-            for (i = 0; i < candidatesAtLastPriority.length; ++i) {
-                datum = candidatesAtLastPriority[i];
-                datum._frequencyValue = this.rnd.random() / datum.frequency;
-            }
-            candidatesAtLastPriority.sort(function(a, b) {
-                return a._frequencyValue - b._frequencyValue;
+        /* Outputs regular content to the page. The content supplied must
+         * be valid "Display Content".
+         *
+         * The content goes to the beginning of the page, unless you
+         * supply the optional selector argument. If you do, the content
+         * appears after the element that matches that selector.
+         */
+        writeBefore(content, elementSelector) {
+            doWrite(content, elementSelector, 'prepend', 'before');
+        }
+
+        /* Outputs regular content to the page. The content supplied must
+         * be valid "Display Content".
+         *
+         * When a selector is not specified, this behaves identically to
+         * System.prototype.write. If you supply a selector, the content
+         * appears as a child node at the end of the content of the
+         * element that matches that selector.
+         */
+
+        writeInto(content, elementSelector) {
+            doWrite(content, elementSelector, 'append', 'append');
+        }
+
+        /* Replaces content with the content supplied, which must be valid
+         * "Display Content".
+         *
+         * When a selector is not specified, this replaces the entire
+         * content of the page. Otherwise, it replaces the element matched
+         * with the selector. This replaces the entire element, including
+         * the matched tags, so ideally the content supplied should fit
+         * in its place in the DOM with the same kind of display element.
+         */
+
+        replaceWith(content, elementSelector) {
+            doWrite(content, elementSelector, 'replaceWith', 'replaceWith');
+        }
+
+        /* Carries out the given situation change or action, as if it were
+         * in a link that has been clicked. This allows you to do
+         * procedural transitions. You might have an action that builds up
+         * the character's strength, and depletes their magic. When the
+         * magic is all gone, you can force a situation change by calling
+         * this method. */
+        doLink(code) {
+            processLink(code);
+        }
+
+        /* Turns any links that target the given href into plain
+         * text. This can be used to remove action options when an action
+         * is no longer available. It is used automatically when you give
+         * a link the 'once' class. */
+        clearLinks(code) {
+            qsa("a[href='" + code + "']").forEach(function(a) {
+                const span = document.createElement("span");
+                span.className = "ex_link";
+                span.innerHTML = a.innerHTML;
+                a.replaceWith(span);
             });
-            var chosen = candidatesAtLastPriority.slice(0, candidatesToInclude);
-            committed.push.apply(committed, chosen);
         }
 
-        // Now sort in ascending display order.
-        committed.sort(function(a, b) {
-            return a.displayOrder - b.displayOrder;
-        });
+        /* Given a list of situation ids, this outputs a standard option
+         * block with the situation choices in the given order.
+         *
+         * The contents of each choice will be a link to the situation,
+         * the text of the link will be given by the situation's
+         * outputText property. Note that the canChoose function is
+         * called, and if it returns false, then the text will appear, but
+         * the link will not be clickable.
+         *
+         * Although canChoose is honored, canView and displayOrder are
+         * not. If you need to honor these, you should either do so
+         * manually, ot else use the `getSituationIdChoices` method to
+         * return an ordered list of valid viewable situation ids.
+         */
+        writeChoices(listOfIds, elementSelector) {
+            if (listOfIds.length === 0) return;
 
-        // And return as a list of ids only.
-        var result = [];
-        for (i = 0; i < committed.length; ++i) {
-            result.push(committed[i].id);
+            const currentSituation = getCurrentSituation();
+            const options = document.createElement("ul");
+            options.className = "options";
+            for (let i = 0; i < listOfIds.length; ++i) {
+                const situationId = listOfIds[i];
+                const situation = game.situations[situationId];
+                assert(situation, "unknown_situation".l({id:situationId}));
+                if (situation == currentSituation)
+                {
+                    continue;
+                }
+
+                let optionText = situation.optionText(character, this,
+                                                      currentSituation);
+                if (!optionText) optionText = "choice".l({number:i+1});
+                const option = document.createElement("li");
+                let a;
+                if (situation.canChoose(character, this, currentSituation)) {
+                    a = document.createElement("a");
+                    a.setAttribute("href", situationId);
+                } else {
+                    a = document.createElement("span");
+                }
+                a.textContent = optionText;
+                option.appendChild(a);
+                options.appendChild(option);
+            }
+            doWrite(options, elementSelector, 'append', 'after');
         }
-        return result;
-    };
+
+        /* Returns a list of situation ids to choose from, given a set of
+         * specifications.
+         *
+         * This function is a complex and powerful way of compiling
+         * implicit situation choices. You give it a list of situation ids
+         * and situation tags (if a single id or tag is needed just that
+         * string can be given, it doesn't need to be wrapped in a
+         * list). Tags should be prefixed with a hash # to differentiate
+         * them from situation ids. The function then considers all
+         * matching situations in descending priority order, calling their
+         * canView functions and filtering out any that should not be
+         * shown, given the current state. Without additional parameters
+         * the function returns a list of the situation ids at the highest
+         * level of priority that has any valid results. So, for example,
+         * if a tag #places matches three situations, one with priority 2,
+         * and two with priority 3, and all of them can be viewed in the
+         * current context, then only the two with priority 3 will be
+         * returned. This allows you to have high-priority situations that
+         * trump any lower situations when they are valid, such as
+         * situations that force the player to go to one destination if
+         * the player is out of money, for example.
+         *
+         * If a minChoices value is given, then the function will attempt
+         * to return at least that many results. If not enough results are
+         * available at the highest priority, then lower priorities will
+         * be considered in turn, until enough situations are found. In
+         * the example above, if we had a minChoices of three, then all
+         * three situations would be returned, even though they have
+         * different priorities. If you need to return all valid
+         * situations, regardless of their priorities, set minChoices to a
+         * large number, such as `Number.MAX_VALUE`, and leave maxChoices
+         * undefined.
+         *
+         * If a maxChoices value is given, then the function will not
+         * return any more than the given number of results. If there are
+         * more than this number of results possible, then the highest
+         * priority resuls will be guaranteed to be returned, but the
+         * lowest priority group will have to fight it out for the
+         * remaining places. In this case, a random sample is chosen,
+         * taking into account the frequency of each situation. So a
+         * situation with a frequency of 100 will be chosen 100 times more
+         * often than a situation with a frequency of 1, if there is one
+         * space available. Often these frequencies have to be taken as a
+         * guideline, and the actual probabilities will only be
+         * approximate. Consider three situations with frequencies of 1,
+         * 1, 100, competing for two spaces. The 100-frequency situation
+         * will be chosen almost every time, but for the other space, one
+         * of the 1-frequency situations must be chosen. So the actual
+         * probabilities will be roughly 50%, 50%, 100%. When selecting
+         * more than one result, frequencies can only be a guide.
+         *
+         * Before this function returns its result, it sorts the
+         * situations in increasing order of their displayOrder values.
+         */
+        getSituationIdChoices(listOfOrOneIdsOrTags, minChoices, maxChoices) {
+            let datum;
+            let i;
+
+            // First check if we have a single string for the id or tag.
+            if (typeof listOfOrOneIdsOrTags === 'string') {
+                listOfOrOneIdsOrTags = [listOfOrOneIdsOrTags];
+            }
+
+            // First we build a list of all candidate ids.
+            const allIds = {};
+            for (i = 0; i < listOfOrOneIdsOrTags.length; ++i) {
+                const tagOrId = listOfOrOneIdsOrTags[i];
+                if (tagOrId.substr(0, 1) == '#') {
+                    const ids = getSituationIdsWithTag(tagOrId.substr(1));
+                    for (let j = 0; j < ids.length; ++j) {
+                        allIds[ids[j]] = true;
+                    }
+                } else {
+                    allIds[tagOrId] = true;
+                }
+            }
+
+            // Filter out anything that can't be viewed right now.
+            const currentSituation = getCurrentSituation();
+            const viewableSituationData = [];
+            for (let situationId in allIds) {
+                const situation = game.situations[situationId];
+                assert(situation, "unknown_situation".l({id:situationId}));
+
+                if (situation.canView(character, system, currentSituation)) {
+                    // While we're here, get the selection data.
+                    const viewableSituationDatum =
+                        situation.choiceData(character, system, currentSituation);
+                    viewableSituationDatum.id = situationId;
+                    viewableSituationData.push(viewableSituationDatum);
+                }
+            }
+
+            // Then we sort in descending priority order.
+            viewableSituationData.sort(function(a, b) {
+                return b.priority - a.priority;
+            });
+
+            const committed = [];
+            let candidatesAtLastPriority = [];
+            let lastPriority;
+            // In descending priority order.
+            for (i = 0; i < viewableSituationData.length; ++i) {
+                datum = viewableSituationData[i];
+                if (datum.priority != lastPriority) {
+                    if (lastPriority !== undefined) {
+                        // We've dropped a priority group, see if we have enough
+                        // situations so far, and stop if we do.
+                        if (minChoices === undefined || i >= minChoices) break;
+                    }
+                    // Continue to acccumulate more options.
+                    committed.push.apply(committed, candidatesAtLastPriority);
+                    candidatesAtLastPriority = [];
+                    lastPriority = datum.priority;
+                }
+                candidatesAtLastPriority.push(datum);
+            }
+
+            // So the values in committed we're committed to, because without
+            // them we wouldn't hit our minimum. But those in
+            // candidatesAtLastPriority might take us over our maximum, so
+            // figure out how many we should choose.
+            const totalChoices = committed.length + candidatesAtLastPriority.length;
+            if (maxChoices === undefined || maxChoices >= totalChoices) {
+                // We can use all the choices.
+                committed.push.apply(committed, candidatesAtLastPriority);
+            } else if (maxChoices >= committed.length) {
+                // We can only use the commited ones.
+                // NO-OP
+            } else {
+                // We have to sample the candidates, using their relative frequency.
+                const candidatesToInclude = maxChoices - committed.length;
+                for (i = 0; i < candidatesAtLastPriority.length; ++i) {
+                    datum = candidatesAtLastPriority[i];
+                    datum._frequencyValue = this.rnd.random() / datum.frequency;
+                }
+                candidatesAtLastPriority.sort(function(a, b) {
+                    return a._frequencyValue - b._frequencyValue;
+                });
+                const chosen = candidatesAtLastPriority.slice(0, candidatesToInclude);
+                committed.push.apply(committed, chosen);
+            }
+
+            // Now sort in ascending display order.
+            committed.sort(function(a, b) {
+                return a.displayOrder - b.displayOrder;
+            });
+
+            // And return as a list of ids only.
+            const result = [];
+            for (i = 0; i < committed.length; ++i) {
+                result.push(committed[i].id);
+            }
+            return result;
+        }
 
     /* Call this to change the character text: the text in the right
      * toolbar before the qualities list. This text is designed to be
@@ -1110,78 +1088,78 @@
      * content you give should be "Display Content" (see
      * `System.prototype.write` for the definition).
      */
-    System.prototype.setCharacterText = function(content) {
-        var block = $id("character_text_content");
-        var newContent = augmentLinks(content);
-        var setContent = function() {
-            block.replaceChildren();
-            insertNodes(block, 'append', newContent);
-        };
-        if (interactive && isVisible(block)) {
-            fadeOut(block, 250, function() {
+        setCharacterText(content) {
+            const block = $id("character_text_content");
+            const newContent = augmentLinks(content);
+            const setContent = function() {
+                block.replaceChildren();
+                insertNodes(block, 'append', newContent);
+            };
+            if (interactive && isVisible(block)) {
+                fadeOut(block, 250, function() {
+                    setContent();
+                    fadeIn(block, 750);
+                });
+                showHighlight($id("character_text"));
+            } else {
                 setContent();
-                fadeIn(block, 750);
-            });
-            showHighlight($id("character_text"));
-        } else {
-            setContent();
+            }
         }
-    };
 
     /* Call this to change the value of a character quality. Don't
      * directly change quality values, because that will not update
      * the UI. (You can change any data in the character's sandbox
      * directly, however, since that isn't displayed). */
-    System.prototype.setQuality = function(quality, newValue) {
-        var oldValue = character.qualities[quality];
-        character.qualities[quality] = newValue;
-        if (!interactive) return;
+        setQuality(quality, newValue) {
+            const oldValue = character.qualities[quality];
+            character.qualities[quality] = newValue;
+            if (!interactive) return;
 
-        // Work out how to display the values.
-        var newDisplay;
-        var qualityDefinition = game.qualities[quality];
-        if (qualityDefinition) {
-            newDisplay = qualityDefinition.format(character, newValue);
-        } else {
-            // We shouldn't display qualities that have no definition.
-            return;
-        }
-
-        // Add the data block, if we need it.
-        var qualityBlock = $id("q_"+quality);
-        if (!qualityBlock) {
-            if (newDisplay === null) return;
-            qualityBlock = addQualityBlock(quality);
-            fadeIn(qualityBlock, 500);
-        } else {
-            // Do nothing if there's nothing to do.
-            if (oldValue == newValue) return;
-
-            // Change the value.
-            if (newDisplay === null) {
-                // Remove the block, and possibly the whole group, if
-                // it is the last quality in the group.
-                var toRemove = null;
-                var groupBlock = qualityBlock.closest('.quality_group');
-                if (qsa('.quality', groupBlock).length <= 1) {
-                    toRemove = groupBlock;
-                } else {
-                    toRemove = qualityBlock;
-                }
-
-                fadeOut(toRemove, 1000, function() {
-                    toRemove.remove();
-                });
+            // Work out how to display the values.
+            let newDisplay;
+            const qualityDefinition = game.qualities[quality];
+            if (qualityDefinition) {
+                newDisplay = qualityDefinition.format(character, newValue);
             } else {
-                var valBlock = qs("[data-attr='value']", qualityBlock);
-                fadeOut(valBlock, 250, function() {
-                    valBlock.innerHTML = newDisplay;
-                    fadeIn(valBlock, 750);
-                });
+                // We shouldn't display qualities that have no definition.
+                return;
             }
+
+            // Add the data block, if we need it.
+            let qualityBlock = $id("q_"+quality);
+            if (!qualityBlock) {
+                if (newDisplay === null) return;
+                qualityBlock = addQualityBlock(quality);
+                fadeIn(qualityBlock, 500);
+            } else {
+                // Do nothing if there's nothing to do.
+                if (oldValue == newValue) return;
+
+                // Change the value.
+                if (newDisplay === null) {
+                    // Remove the block, and possibly the whole group, if
+                    // it is the last quality in the group.
+                    let toRemove = null;
+                    const groupBlock = qualityBlock.closest('.quality_group');
+                    if (qsa('.quality', groupBlock).length <= 1) {
+                        toRemove = groupBlock;
+                    } else {
+                        toRemove = qualityBlock;
+                    }
+
+                    fadeOut(toRemove, 1000, function() {
+                        toRemove.remove();
+                    });
+                } else {
+                    const valBlock = qs("[data-attr='value']", qualityBlock);
+                    fadeOut(valBlock, 250, function() {
+                        valBlock.innerHTML = newDisplay;
+                        fadeIn(valBlock, 750);
+                    });
+                }
+            }
+            showHighlight(qualityBlock);
         }
-        showHighlight(qualityBlock);
-    };
 
     /* Changes a quality to a new value, but also shows a progress bar
      * animation of the change. This probably only makes sense for
@@ -1218,103 +1196,104 @@
      *     left and right extents with "10" and "11" respectively. If
      *     these are not given, then the labels will be omitted.
      */
-    System.prototype.animateQuality = function(quality, newValue, opts) {
-        var currentValue = character.qualities[quality];
-        if (!currentValue) currentValue = 0;
+        animateQuality(quality, newValue, opts) {
+            let currentValue = character.qualities[quality];
+            if (!currentValue) currentValue = 0;
 
-        // Change the base UI.
-        this.setQuality(quality, newValue);
-        if (!interactive) return;
+            // Change the base UI.
+            this.setQuality(quality, newValue);
+            if (!interactive) return;
 
-        // Overload default options.
-        var myOpts = {
-            from: 0,
-            to: 1,
-            title: null,
-            showValue: true,
-            displayValue: null,
-            leftLabel: null,
-            rightLabel: null
-        };
-        if (newValue < currentValue) {
-            myOpts.from = 1;
-            myOpts.to = 0;
-        }
-        Object.assign(myOpts, opts);
-
-        // Run through the quality definition.
-        var qualityDefinition = game.qualities[quality];
-        if (qualityDefinition) {
-            // Work out how to display the value
-            if (myOpts.displayValue === null) {
-                myOpts.displayValue = qualityDefinition.format(
-                    character, newValue
-                );
+            // Overload default options.
+            const myOpts = {
+                from: 0,
+                to: 1,
+                title: null,
+                showValue: true,
+                displayValue: null,
+                leftLabel: null,
+                rightLabel: null
+            };
+            if (newValue < currentValue) {
+                myOpts.from = 1;
+                myOpts.to = 0;
             }
+            Object.assign(myOpts, opts);
 
-            // Use the title.
-            if (myOpts.title === null) {
-                myOpts.title = qualityDefinition.title;
-            }
-        }
-
-        // Create the animated bar.
-        var totalWidth = 496;
-        var bar = qs("#ui_library #progress_bar").cloneNode(true);
-        bar.removeAttribute("id");
-        var widthElement = qs("[data-attr='width']", bar);
-        widthElement.style.width = (myOpts.from*totalWidth) + 'px';
-
-        // Configure its labels
-        var titleLabel = qs("[data-attr='name']", bar);
-        var valueLabel = qs("[data-attr='value']", bar);
-        var leftLabel = qs("[data-attr='left_label']", bar);
-        var rightLabel = qs("[data-attr='right_label']", bar);
-        if (myOpts.title) {
-            titleLabel.innerHTML = myOpts.title;
-        } else {
-            titleLabel.remove();
-        }
-        if (myOpts.showValue && myOpts.displayValue !== null) {
-            valueLabel.innerHTML = myOpts.displayValue;
-        } else {
-            valueLabel.remove();
-        }
-        if (myOpts.leftLabel) {
-            leftLabel.innerHTML = myOpts.leftLabel;
-        } else {
-            leftLabel.remove();
-        }
-        if (myOpts.rightLabel) {
-            rightLabel.innerHTML = myOpts.rightLabel;
-        } else {
-            rightLabel.remove();
-        }
-        $id('content').appendChild(bar);
-
-        // Start the animation
-        var that = this;
-        setTimeout(function() {
-            animateWidth(widthElement, myOpts.to*totalWidth,
-                         that.options.progress_bar_speed,
-                         function() {
-                    // After a moment to allow the bar to be read, we can
-                    // remove it.
-                    setTimeout(function() {
-                        if (mobile) {
-                            fadeOut(bar, that.options.mobile_hide_speed,
-                                    function() {
-                                        bar.remove();
-                                    });
-                        } else {
-                            fadeSlideUp(bar, that.options.fade_speed,
-                                        that.options.slide_up_speed);
-                        }
-                    }, 2000);
+            // Run through the quality definition.
+            const qualityDefinition = game.qualities[quality];
+            if (qualityDefinition) {
+                // Work out how to display the value
+                if (myOpts.displayValue === null) {
+                    myOpts.displayValue = qualityDefinition.format(
+                        character, newValue
+                    );
                 }
-            );
-        }, 500);
-    };
+
+                // Use the title.
+                if (myOpts.title === null) {
+                    myOpts.title = qualityDefinition.title;
+                }
+            }
+
+            // Create the animated bar.
+            const totalWidth = 496;
+            const bar = qs("#ui_library #progress_bar").cloneNode(true);
+            bar.removeAttribute("id");
+            const widthElement = qs("[data-attr='width']", bar);
+            widthElement.style.width = (myOpts.from*totalWidth) + 'px';
+
+            // Configure its labels
+            const titleLabel = qs("[data-attr='name']", bar);
+            const valueLabel = qs("[data-attr='value']", bar);
+            const leftLabel = qs("[data-attr='left_label']", bar);
+            const rightLabel = qs("[data-attr='right_label']", bar);
+            if (myOpts.title) {
+                titleLabel.innerHTML = myOpts.title;
+            } else {
+                titleLabel.remove();
+            }
+            if (myOpts.showValue && myOpts.displayValue !== null) {
+                valueLabel.innerHTML = myOpts.displayValue;
+            } else {
+                valueLabel.remove();
+            }
+            if (myOpts.leftLabel) {
+                leftLabel.innerHTML = myOpts.leftLabel;
+            } else {
+                leftLabel.remove();
+            }
+            if (myOpts.rightLabel) {
+                rightLabel.innerHTML = myOpts.rightLabel;
+            } else {
+                rightLabel.remove();
+            }
+            $id('content').appendChild(bar);
+
+            // Start the animation
+            const that = this;
+            setTimeout(function() {
+                animateWidth(widthElement, myOpts.to*totalWidth,
+                             that.options.progress_bar_speed,
+                             function() {
+                        // After a moment to allow the bar to be read, we can
+                        // remove it.
+                        setTimeout(function() {
+                            if (mobile) {
+                                fadeOut(bar, that.options.mobile_hide_speed,
+                                        function() {
+                                            bar.remove();
+                                        });
+                            } else {
+                                fadeSlideUp(bar, that.options.fade_speed,
+                                            that.options.slide_up_speed);
+                            }
+                        }, 2000);
+                    }
+                );
+            }, 500);
+        }
+    }
 
     /* The character that is passed into each situation is of this
      * form.
@@ -1335,10 +1314,12 @@
      * UI, although you are free to use it to create suitable output
      * for the player..
      */
-    var Character = function() {
-        this.qualities = {};
-        this.sandbox = {};
-    };
+    class Character {
+        constructor() {
+            this.qualities = {};
+            this.sandbox = {};
+        }
+    }
 
     /* The data structure holding the content for the game. By default
      * this holds nothing. It is this data structure that is populated
@@ -1349,7 +1330,7 @@
      * course of the game. It is never saved, so anything that might
      * change should be stored in the character.
      */
-    var game = {
+    const game = {
 
         // Situations
 
@@ -1449,10 +1430,10 @@
     // -----------------------------------------------------------------------
 
     /* The global system object. */
-    var system = new System();
+    const system = new System();
 
     /* This is the data on the player's progress that gets saved. */
-    var progress = {
+    let progress = {
         // A random seed string, used internally to make random
         // sequences predictable.
         seed: null,
@@ -1463,30 +1444,30 @@
     };
 
     /* The Id of the current situation the player is in. */
-    var current = null;
+    let current = null;
 
     /* This is the current character. It should be reconstructable
      * from the above progress data. */
-    var character = null;
+    let character = null;
 
     /* Tracks whether we're in interactive mode or batch mode. */
-    var interactive = true;
+    let interactive = true;
 
     /* Tracks whether we're mobile or not. */
-    var mobile = isMobileDevice();
+    let mobile = isMobileDevice();
 
     /* The system time when the game was initialized. */
-    var startTime;
+    let startTime;
 
     /* The stack of links, resulting from the last action, still be to
      * resolved. */
-    var linkStack = null;
+    let linkStack = null;
 
     // -----------------------------------------------------------------------
     // Utility Functions
     // -----------------------------------------------------------------------
 
-    var getCurrentSituation = function() {
+    const getCurrentSituation = function() {
         if (current) {
             return game.situations[current];
         } else {
@@ -1494,7 +1475,7 @@
         }
     };
 
-    var parse = function(str) {
+    const parse = function(str) {
         if (str === undefined) {
             return str;
         } else {
@@ -1502,7 +1483,7 @@
         }
     };
 
-    var parseList = function(str, canBeUndefined) {
+    const parseList = function(str, canBeUndefined) {
         if (str === undefined) {
             if (canBeUndefined) {
                 return undefined;
@@ -1514,25 +1495,25 @@
         }
     };
 
-    var parseFn = function(str) {
+    const parseFn = function(str) {
         if (str === undefined) {
             return str;
         } else {
-            var fstr = "(function(character, system, situation) {\n" +
+            const fstr = "(function(character, system, situation) {\n" +
                 str + "\n})";
-            var fn = eval(fstr);
+            const fn = eval(fstr);
             return fn;
         }
     };
 
-    var loadHTMLSituations = function() {
+    const loadHTMLSituations = function() {
         qsa("div.situation").forEach(function(situationElement) {
-            var id = attr(situationElement, "id");
+            const id = attr(situationElement, "id");
             assert(game.situations[id] === undefined,
                    "existing_situation".l({id:id}));
 
-            var content = situationElement.innerHTML;
-            var opts = {
+            const content = situationElement.innerHTML;
+            const opts = {
                 // Situation content
                 optionText: attr(situationElement, "data-option-text"),
                 canView: parseFn(attr(situationElement, "data-can-view")),
@@ -1559,10 +1540,10 @@
      * writeBefore, the last two arguments control which DOM insertion
      * method is used to add the content.
      */
-    var doWrite = function(content, selector, addMethod, appendMethod) {
+    const doWrite = function(content, selector, addMethod, appendMethod) {
         continueOutputTransaction();
-        var output = augmentLinks(content);
-        var element = null;
+        const output = augmentLinks(content);
+        let element = null;
         if (selector) element = qs(selector);
         if (!element) {
             insertNodes($id('content'), addMethod, output);
@@ -1575,9 +1556,9 @@
          * top edge of the *following* element and move that exactly
          * to the bottom (while still ensuring that this element is fully
          * visible.) */
-        var lastOutput = output[output.length - 1];
-        var nextel = lastOutput ? lastOutput.nextElementSibling : null;
-        var scrollPoint;
+        const lastOutput = output[output.length - 1];
+        const nextel = lastOutput ? lastOutput.nextElementSibling : null;
+        let scrollPoint;
         if (!nextel) {
             scrollPoint = elHeight($id('content')) +
                 elHeight($id('title')) + 60;
@@ -1585,7 +1566,7 @@
             scrollPoint = docTop(nextel) - window.innerHeight;
         }
         if (output.length) {
-            var outputTop = docTop(output[0]);
+            const outputTop = docTop(output[0]);
             if (scrollPoint > outputTop)
                 scrollPoint = outputTop;
         }
@@ -1599,21 +1580,21 @@
     };
 
     /* Gets the unique id used to identify saved games. */
-    var getSaveId = function() {
+    const getSaveId = function() {
         return 'undum_'+game.id+"_"+game.version;
     };
 
     /* Adds the quality blocks to the character tools. */
-    var showQualities = function() {
+    const showQualities = function() {
         $id("qualities").replaceChildren();
-        for (var qualityId in character.qualities) {
+        for (let qualityId in character.qualities) {
             addQualityBlock(qualityId);
         }
     };
 
     /* Fades in and out a highlight on the given element. */
-    var showHighlight = function(domElement) {
-        var highlight = qs(".highlight", domElement);
+    const showHighlight = function(domElement) {
+        let highlight = qs(".highlight", domElement);
         if (!highlight) {
             highlight = document.createElement('div');
             highlight.className = 'highlight';
@@ -1629,11 +1610,11 @@
      * fits into an existing list of DOM elements. This is done by
      * priority order, so all elements (existing and new) must have
      * their data-priority attribute set. */
-    var insertAtCorrectPosition = function(parent, newItem) {
-        var newPriority = newItem.getAttribute('data-priority');
-        var children = parent.children;
-        for (var i = 0; i < children.length; i++) {
-            var child = children[i];
+    const insertAtCorrectPosition = function(parent, newItem) {
+        const newPriority = newItem.getAttribute('data-priority');
+        const children = parent.children;
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
             if (newPriority < child.getAttribute('data-priority')) {
                 child.before(newItem);
                 return;
@@ -1643,15 +1624,15 @@
     };
 
     /* Adds a new group to the correct location in the quality list. */
-    var addGroupBlock = function(groupId) {
-        var groupDefinition = game.qualityGroups[groupId];
+    const addGroupBlock = function(groupId) {
+        const groupDefinition = game.qualityGroups[groupId];
 
         // Build the group div with appropriate heading.
-        var groupBlock = qs("#ui_library #quality_group").cloneNode(true);
+        const groupBlock = qs("#ui_library #quality_group").cloneNode(true);
         groupBlock.setAttribute("id", "g_"+groupId);
         groupBlock.setAttribute("data-priority", groupDefinition.priority);
 
-        var titleElement = qs("[data-attr='title']", groupBlock);
+        const titleElement = qs("[data-attr='title']", groupBlock);
         if (groupDefinition.title) {
             titleElement.innerHTML = groupDefinition.title;
         } else {
@@ -1659,50 +1640,50 @@
         }
 
         if (groupDefinition.extraClasses) {
-            for (var i = 0; i < groupDefinition.extraClasses.length; i++) {
+            for (let i = 0; i < groupDefinition.extraClasses.length; i++) {
                 groupBlock.classList.add(groupDefinition.extraClasses[i]);
             }
         }
 
         // Add the block to the correct place.
-        var qualities = $id("qualities");
+        const qualities = $id("qualities");
         insertAtCorrectPosition(qualities, groupBlock);
         return groupBlock;
     };
 
     /* Adds a new quality to the correct location in the quality list. */
-    var addQualityBlock = function(qualityId) {
+    const addQualityBlock = function(qualityId) {
         // Make sure we want to display this quality.
-        var qualityDefinition = game.qualities[qualityId];
+        const qualityDefinition = game.qualities[qualityId];
         if (!qualityDefinition) {
           throw new Error("Can't display a quality that hasn't been defined: "+
                           qualityId);
         }
 
         // Work out how the value should be displayed.
-        var name = qualityDefinition.title;
-        var val = qualityDefinition.format(
+        const name = qualityDefinition.title;
+        const val = qualityDefinition.format(
             character, character.qualities[qualityId]
         );
         if (val === null) return null;
 
         // Create the quality output.
-        var qualityBlock = qs("#ui_library #quality").cloneNode(true);
+        const qualityBlock = qs("#ui_library #quality").cloneNode(true);
         qualityBlock.setAttribute("id", "q_"+qualityId);
         qualityBlock.setAttribute("data-priority", qualityDefinition.priority);
         qs("[data-attr='name']", qualityBlock).innerHTML = name;
         qs("[data-attr='value']", qualityBlock).innerHTML = val;
         if (qualityDefinition.extraClasses) {
-            for (var i = 0; i < qualityDefinition.extraClasses.length; i++) {
+            for (let i = 0; i < qualityDefinition.extraClasses.length; i++) {
                 qualityBlock.classList.add(qualityDefinition.extraClasses[i]);
             }
         }
 
         // Find or create the group block.
-        var groupBlock;
-        var groupId = qualityDefinition.group;
+        let groupBlock;
+        const groupId = qualityDefinition.group;
         if (groupId) {
-            var group = game.qualityGroups[groupId];
+            const group = game.qualityGroups[groupId];
             assert(group, "no_group_definition".l({id: groupId}));
             groupBlock = $id("g_"+groupId);
             if (!groupBlock) {
@@ -1711,7 +1692,7 @@
         }
 
         // Position it correctly.
-        var groupQualityList = qs(".qualities_in_group", groupBlock);
+        const groupQualityList = qs(".qualities_in_group", groupBlock);
         insertAtCorrectPosition(groupQualityList, qualityBlock);
         return qualityBlock;
     };
@@ -1726,9 +1707,9 @@
      * document.) Whenever we do a write(), we'll have to update the
      * top (last) stack element to that position.
      */
-    var scrollStack = [];
-    var pendingFirstWrite = false;
-    var startOutputTransaction = function() {
+    const scrollStack = [];
+    let pendingFirstWrite = false;
+    const startOutputTransaction = function() {
         if (scrollStack.length === 0) {
             pendingFirstWrite = true;
         }
@@ -1737,16 +1718,16 @@
             elHeight($id('content')) + elHeight($id('title')) + 60
         );
     };
-    var continueOutputTransaction = function() {
+    const continueOutputTransaction = function() {
         if (pendingFirstWrite) {
             pendingFirstWrite = false;
-            var separator = qs("#ui_library #turn_separator").cloneNode(true);
+            const separator = qs("#ui_library #turn_separator").cloneNode(true);
             separator.removeAttribute("id");
             $id('content').appendChild(separator);
         }
     };
-    var endOutputTransaction = function() {
-        var scrollPoint = scrollStack.pop();
+    const endOutputTransaction = function() {
+        let scrollPoint = scrollStack.pop();
         if (scrollStack.length === 0 && scrollPoint !== null) {
             if (interactive && !mobile) {
                 smoothScrollTo(scrollPoint);
@@ -1757,8 +1738,8 @@
 
     /* This gets called when a link needs to be followed, regardless
      * of whether it was user action that initiated it. */
-    var linkRe = /^([a-z0-9_-]+|\.)(\/([0-9a-z_-]+))?$/;
-    var processLink = function(code) {
+    const linkRe = /^([a-z0-9_-]+|\.)(\/([0-9a-z_-]+))?$/;
+    const processLink = function(code) {
         // Check if we should do this now, or if processing is already
         // underway.
         if (linkStack !== null) {
@@ -1794,12 +1775,12 @@
      * code that further calls doLink, and so on. This method processes
      * each one, and processLink manages this.
      */
-    var processOneLink = function(code) {
-        var match = code.match(linkRe);
+    const processOneLink = function(code) {
+        const match = code.match(linkRe);
         assert(match, "link_not_valid".l({link:code}));
 
-        var situation = match[1];
-        var action = match[3];
+        let situation = match[1];
+        const action = match[3];
 
         // Change the situation
         if (situation !== '.') {
@@ -1818,7 +1799,7 @@
                 if (game.beforeAction) {
                     // Try the global act handler, and see if we need
                     // to notify the situation.
-                    var consumed = game.beforeAction(
+                    const consumed = game.beforeAction(
                         character, system, current, action
                     );
                     if (consumed !== true) {
@@ -1838,18 +1819,18 @@
 
     /* This gets called when the user clicks a link to carry out an
      * action. */
-    var processClick = function(code) {
-        var now = (new Date()).getTime() * 0.001;
+    const processClick = function(code) {
+        const now = (new Date()).getTime() * 0.001;
         system.time = now - startTime;
         progress.sequence.push({link:code, when:system.time});
         processLink(code);
     };
 
     /* Transitions between situations. */
-    var doTransitionTo = function(newSituationId) {
-        var oldSituationId = current;
-        var oldSituation = getCurrentSituation();
-        var newSituation = game.situations[newSituationId];
+    const doTransitionTo = function(newSituationId) {
+        const oldSituationId = current;
+        const oldSituation = getCurrentSituation();
+        const newSituation = game.situations[newSituationId];
 
         assert(newSituation, "unknown_situation".l({id:newSituationId}));
 
@@ -1862,9 +1843,9 @@
                 game.exit(character, system, oldSituationId, newSituationId);
             }
 
-            var contentToHide = qsa('#content .transient, #content ul.options');
+            const contentToHide = qsa('#content .transient, #content ul.options');
             qsa("#content a").forEach(function(link) {
-                var href = link.getAttribute("href");
+                const href = link.getAttribute("href");
                 if (href && href.match(/[?&]transient[=&]?/)) {
                     contentToHide.push(link);
                 }
@@ -1889,11 +1870,11 @@
             }
             //  Remove links and transient sections.
             qsa('#content a').forEach(function(a) {
-                var href = a.getAttribute("href");
+                const href = a.getAttribute("href");
                 if (a.classList.contains('sticky') ||
                     (href && href.match(/[?&]sticky[=&]?/)))
                     return;
-                var span = document.createElement("span");
+                const span = document.createElement("span");
                 span.className = "ex_link";
                 span.innerHTML = a.innerHTML;
                 a.replaceWith(span);
@@ -1917,13 +1898,13 @@
 
     /* Returns HTML from the given content with the non-raw links
      * wired up. */
-    var augmentLinks = function(content) {
-        var output = asElements(content);
+    const augmentLinks = function(content) {
+        const output = asElements(content);
 
         // Wire up the links for regular <a> tags.
         output.forEach(function(topElement) {
             qsa("a", topElement).forEach(function(a) {
-                var href = a.getAttribute('href');
+                const href = a.getAttribute('href');
                 if (!a.classList.contains("raw") ||
                     (href && href.match(/[?&]raw[=&]?/))) {
                     if (href && href.match(linkRe)) {
@@ -1953,8 +1934,8 @@
     };
 
     /* Erases the character in local storage. This is permanent! */
-    var doErase = function(force) {
-        var saveId = getSaveId();
+    const doErase = function(force) {
+        const saveId = getSaveId();
         if (localStorage[saveId]) {
             if (force || confirm("erase_message".l())) {
                 delete localStorage[saveId];
@@ -1965,12 +1946,12 @@
     };
 
     /* Find and return a list of ids for all situations with the given tag. */
-    var getSituationIdsWithTag = function(tag) {
-        var result = [];
-        for (var situationId in game.situations) {
-            var situation = game.situations[situationId];
+    const getSituationIdsWithTag = function(tag) {
+        const result = [];
+        for (let situationId in game.situations) {
+            const situation = game.situations[situationId];
 
-            for (var i = 0; i < situation.tags.length; ++i) {
+            for (let i = 0; i < situation.tags.length; ++i) {
                 if (situation.tags[i] == tag) {
                     result.push(situationId);
                     break;
@@ -1982,18 +1963,18 @@
 
     /* Set up the screen from scratch to reflect the current game
      * state. */
-    var initGameDisplay = function() {
+    const initGameDisplay = function() {
         // Transition into the first situation,
         $id("content").replaceChildren();
 
-        var situation = getCurrentSituation();
+        const situation = getCurrentSituation();
         assert(situation, "no_current_situation".l());
 
         showQualities();
     };
 
     /* Clear the current game output and start again. */
-    var startGame = function() {
+    const startGame = function() {
         progress.seed = new Date().toString();
 
         character = new Character();
@@ -2014,10 +1995,10 @@
     };
 
     /* Saves the character to local storage. */
-    var saveGame = function() {
+    const saveGame = function() {
         // Store when we're saving the game, to avoid exploits where a
         // player loads their file to gain extra time.
-        var now = (new Date()).getTime() * 0.001;
+        const now = (new Date()).getTime() * 0.001;
         progress.saveTime = now - startTime;
 
         // Save the game.
@@ -2029,7 +2010,7 @@
     };
 
     /* Loads the game from the given data */
-    var loadGame = function(characterData) {
+    const loadGame = function(characterData) {
         progress = characterData;
 
         character = new Character();
@@ -2044,8 +2025,8 @@
 
         // Run through all the player's history.
         interactive = false;
-        for (var i = 0; i < progress.sequence.length; i++) {
-            var step = progress.sequence[i];
+        for (let i = 0; i < progress.sequence.length; i++) {
+            const step = progress.sequence[i];
             // The action must be done at the recorded time.
             system.time = step.when;
             processLink(step.link);
@@ -2053,7 +2034,7 @@
         interactive = true;
 
         // Reverse engineer the start time.
-        var now = new Date().getTime() * 0.001;
+        const now = new Date().getTime() * 0.001;
         startTime = now - progress.saveTime;
 
         // Because we did the run through non-interactively, now we
@@ -2096,14 +2077,14 @@
 
         // Handle storage.
         if (hasLocalStorage()) {
-            var erase = $id("erase");
+            const erase = $id("erase");
             erase.addEventListener('click', function() {
                 doErase();
             });
-            var save = $id("save");
+            const save = $id("save");
             save.addEventListener('click', saveGame);
 
-            var storedCharacter = localStorage[getSaveId()];
+            const storedCharacter = localStorage[getSaveId()];
             if (storedCharacter) {
                 try {
                     loadGame(JSON.parse(storedCharacter));
@@ -2148,24 +2129,24 @@
         // first links.
         document.body.addEventListener('click', function(event) {
             // Make option clicks pass through to their first link.
-            var item = event.target.closest("ul.options li, #menu li");
+            const item = event.target.closest("ul.options li, #menu li");
             if (!item) return;
-            var link = qs("a", item);
+            const link = qs("a", item);
             if (link) {
                 link.click();
             }
         });
 
         // Switch between the two UIs as we resize.
-        var resize = function() {
+        const resize = function() {
             // Work out if we're mobile or not.
-            var wasMobile = mobile;
+            const wasMobile = mobile;
             mobile = isMobileDevice();
 
             if (wasMobile != mobile) {
-                var showing = !isVisible(qs(".click_message"));
+                const showing = !isVisible(qs(".click_message"));
                 if (mobile) {
-                    var menu = $id("menu");
+                    const menu = $id("menu");
                     if (showing) {
                         $id("toolbar").style.display = '';
                         menu.style.display = '';
@@ -2203,15 +2184,15 @@
         initMenu();
     });
 
-    var initMenu = function() {
-        var menu = $id("menu");
+    const initMenu = function() {
+        const menu = $id("menu");
 
-        var menuVisible = false;
-        var open = function() {
+        let menuVisible = false;
+        const open = function() {
             animateTop(menu, 48, 500);
             menuVisible = true;
         };
-        var close = function() {
+        const close = function() {
             animateTop(menu, -elHeight(menu)-52, 250);
             menuVisible = false;
         };
@@ -2235,14 +2216,14 @@
             menuLink.addEventListener('click', function(event) {
                 event.preventDefault();
                 event.stopPropagation();
-                var target = qs(menuLink.getAttribute('href'));
+                const target = qs(menuLink.getAttribute('href'));
                 if (target && !isVisible(target)) {
                     // Fade out those we don't want. (Note: the
                     // original faded out every panel, including the
                     // target, before fading the target back in. We
                     // keep that behavior.)
                     qsa("#menu a").forEach(function(otherLink) {
-                        var otherTarget =
+                        const otherTarget =
                             qs(otherLink.getAttribute('href'));
                         if (otherTarget) fadeOut(otherTarget, 250);
                     });
@@ -2261,20 +2242,20 @@
 
     // Internationalization support based on the code provided by Oreolek.
     (function() {
-        var codesToTry = {};
+        const codesToTry = {};
         /* Compiles a list of fallback languages to try if the given code
          * doesn't have the message we need. Caches it for future use. */
-        var getCodesToTry = function(languageCode) {
-            var codeArray = codesToTry[languageCode];
+        const getCodesToTry = function(languageCode) {
+            let codeArray = codesToTry[languageCode];
             if (codeArray) return codeArray;
 
             codeArray = [];
             if (languageCode in undum.language) {
                 codeArray.push(languageCode);
             }
-            var elements = languageCode.split('-');
-            for (var i = elements.length-2; i > 0; i--) {
-                var thisCode = elements.slice(0, i).join('-');
+            const elements = languageCode.split('-');
+            for (let i = elements.length-2; i > 0; i--) {
+                const thisCode = elements.slice(0, i).join('-');
                 if (thisCode in undum.language) {
                     codeArray.push(thisCode);
                 }
@@ -2283,15 +2264,15 @@
             codesToTry[languageCode] = codeArray;
             return codeArray;
         };
-        var lookup = function(languageCode, message) {
-            var languageData = undum.language[languageCode];
+        const lookup = function(languageCode, message) {
+            const languageData = undum.language[languageCode];
             if (!languageData) return null;
             return languageData[message];
         };
-        var localize = function(languageCode, message) {
-            var localized, thisCode;
-            var languageCodes = getCodesToTry(languageCode);
-            for (var i = 0; i < languageCodes.length; i++) {
+        const localize = function(languageCode, message) {
+            let localized, thisCode;
+            const languageCodes = getCodesToTry(languageCode);
+            for (let i = 0; i < languageCodes.length; i++) {
                 thisCode = languageCodes[i];
                 localized = lookup(thisCode, message);
                 if (localized) return localized;
@@ -2302,14 +2283,14 @@
         // API
         String.prototype.l = function(args) {
             // Get lang attribute from html tag.
-            var lang = document.documentElement.getAttribute("lang") || "";
+            const lang = document.documentElement.getAttribute("lang") || "";
 
             // Find the localized form.
-            var localized = localize(lang, this);
+            let localized = localize(lang, this);
 
             // Merge in any replacement content.
             if (args) {
-                for (var name in args) {
+                for (let name in args) {
                     localized = localized.replace(
                         new RegExp("\\{"+name+"\\}"), args[name]
                     );
@@ -2353,65 +2334,67 @@
     // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
     // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
     // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-    var Random = (function() {
+    const Random = (function() {
         // Within this closure function the code is basically
-        // David's. Undum's custom extensions are added to the
-        // prototype outside of this function.
-        var width = 256;
-        var chunks = 6;
-        var significanceExponent = 52;
-        var startdenom = Math.pow(width, chunks);
-        var significance = Math.pow(2, significanceExponent);
-        var overflow = significance * 2;
+        // David's. Undum's custom extensions are added as class
+        // methods, below.
+        const width = 256;
+        const chunks = 6;
+        const significanceExponent = 52;
+        const startdenom = Math.pow(width, chunks);
+        const significance = Math.pow(2, significanceExponent);
+        const overflow = significance * 2;
+        const diceRe = /^([1-9][0-9]*)?d([%FA]|[1-9][0-9]*)([-+][1-9][0-9]*)?$/;
+        const aveMapping = [2,3,3,4,4,5];
 
-        var Random = function(seed) {
-            this.random = null;
-            if (!seed) throw {
-                name: "RandomSeedError",
-                message: "random_seed_error".l()
-            };
-            var key = [];
-            mixkey(seed, key);
-            var arc4 = new ARC4(key);
-            this.random = function() {
-                var n = arc4.g(chunks);
-                var d = startdenom;
-                var x = 0;
-                while (n < significance) {
-                    n = (n + x) * width;
-                    d *= width;
-                    x = arc4.g(1);
-                }
-                while (n >= overflow) {
-                    n /= 2;
-                    d /= 2;
-                    x >>>= 1;
-                }
-                return (n + x) / d;
-            };
-        };
-        // Helper type.
-        var ARC4 = function(key) {
-            var t, u, me = this, keylen = key.length;
-            var i = 0, j = me.i = me.j = me.m = 0;
-            me.S = [];
-            me.c = [];
-            if (!keylen) { key = [keylen++]; }
-            while (i < width) { me.S[i] = i++; }
-            for (i = 0; i < width; i++) {
-                t = me.S[i];
-                j = lowbits(j + t + key[i % keylen]);
-                u = me.S[j];
-                me.S[i] = u;
-                me.S[j] = t;
+        // Helper functions.
+        const mixkey = function(seed, key) {
+            seed += '';
+            let smear = 0;
+            for (let j = 0; j < seed.length; j++) {
+                const lb = lowbits(j);
+                smear ^= key[lb];
+                key[lb] = lowbits(smear*19 + seed.charCodeAt(j));
             }
-            me.g = function getnext(count) {
-                var s = me.S;
-                var i = lowbits(me.i + 1); var t = s[i];
-                var j = lowbits(me.j + t); var u = s[j];
+            seed = '';
+            for (const k in key) {
+                seed += String.fromCharCode(key[k]);
+            }
+            return seed;
+        };
+        const lowbits = function(n) {
+            return n & (width - 1);
+        };
+
+        // Helper type.
+        class ARC4 {
+            constructor(key) {
+                let t, u;
+                const keylen = key.length;
+                let i = 0, j = 0;
+                this.i = 0;
+                this.j = 0;
+                this.m = 0;
+                this.S = [];
+                this.c = [];
+                if (!keylen) { key = [keylen++]; }
+                while (i < width) { this.S[i] = i++; }
+                for (i = 0; i < width; i++) {
+                    t = this.S[i];
+                    j = lowbits(j + t + key[i % keylen]);
+                    u = this.S[j];
+                    this.S[i] = u;
+                    this.S[j] = t;
+                }
+                this.g(width);
+            }
+            g(count) {
+                const s = this.S;
+                let i = lowbits(this.i + 1); let t = s[i];
+                let j = lowbits(this.j + t); let u = s[j];
                 s[i] = u;
                 s[j] = t;
-                var r = s[lowbits(t + u)];
+                let r = s[lowbits(t + u)];
                 while (--count) {
                     i = lowbits(i + 1); t = s[i];
                     j = lowbits(j + t); u = s[j];
@@ -2419,116 +2402,119 @@
                     s[j] = t;
                     r = r * width + s[lowbits(t + u)];
                 }
-                me.i = i;
-                me.j = j;
+                this.i = i;
+                this.j = j;
                 return r;
-            };
-            me.g(width);
-        };
-        // Helper functions.
-        var mixkey = function(seed, key) {
-            seed += '';
-            var smear = 0;
-            for (var j = 0; j < seed.length; j++) {
-                var lb = lowbits(j);
-                smear ^= key[lb];
-                key[lb] = lowbits(smear*19 + seed.charCodeAt(j));
             }
-            seed = '';
-            for (j in key) {
-                seed += String.fromCharCode(key[j]);
+        }
+
+        class Random {
+            constructor(seed) {
+                if (!seed) throw {
+                    name: "RandomSeedError",
+                    message: "random_seed_error".l()
+                };
+                const key = [];
+                mixkey(seed, key);
+                const arc4 = new ARC4(key);
+                this.random = function() {
+                    let n = arc4.g(chunks);
+                    let d = startdenom;
+                    let x = 0;
+                    while (n < significance) {
+                        n = (n + x) * width;
+                        d *= width;
+                        x = arc4.g(1);
+                    }
+                    while (n >= overflow) {
+                        n /= 2;
+                        d /= 2;
+                        x >>>= 1;
+                    }
+                    return (n + x) / d;
+                };
             }
-            return seed;
-        };
-        var lowbits = function(n) {
-            return n & (width - 1);
-        };
+            /* Returns a random floating point number between zero and
+             * one. NB: The method below just throws an error, it will
+             * be overridden in each Random object when the seed has
+             * been correctly configured. */
+            random() {
+                throw {
+                    name:"RandomError",
+                    message: "random_error".l()
+                };
+            }
+            /* Returns an integer between the given min and max values,
+             * inclusive. */
+            randomInt(min, max) {
+                return min + Math.floor((max-min+1)*this.random());
+            }
+            /* Returns the result of rolling n dice with dx sides, and adding
+             * plus. */
+            dice(n, dx, plus) {
+                let result = 0;
+                for (let i = 0; i < n; i++) {
+                    result += this.randomInt(1, dx);
+                }
+                if (plus) result += plus;
+                return result;
+            }
+            /* Returns the result of rolling n averaging dice (i.e. 6 sided dice
+             * with sides 2,3,3,4,4,5). And adding plus. */
+            aveDice(n, plus) {
+                let result = 0;
+                for (let i = 0; i < n; i++) {
+                    result += aveMapping[this.randomInt(0, 5)];
+                }
+                if (plus) result += plus;
+                return result;
+            }
+            /* Returns a dice-roll result from the given string dice
+             * specification. The specification should be of the form xdy+z,
+             * where the x component and z component are optional. This rolls
+             * x dice of with y sides, and adds z to the result, the z
+             * component can also be negative: xdy-z. The y component can be
+             * either a number of sides, or can be the special values 'F', for
+             * a fudge die (with 3 sides, +,0,-), '%' for a 100 sided die, or
+             * 'A' for an averaging die (with sides 2,3,3,4,4,5).
+             */
+            diceString(def) {
+                const match = def.match(diceRe);
+                if (!match) {
+                    throw new Error(
+                        "dice_string_error".l({string:def})
+                    );
+                }
+
+                const num = match[1]?parseInt(match[1], 10):1;
+                let sides;
+                let bonus = match[3]?parseInt(match[3], 10):0;
+
+                switch (match[2]) {
+                case 'A':
+                    return this.aveDice(num, bonus);
+                case 'F':
+                    sides = 3;
+                    bonus -= num*2;
+                    break;
+                case '%':
+                    sides = 100;
+                    break;
+                default:
+                    sides = parseInt(match[2], 10);
+                    break;
+                }
+                return this.dice(num, sides, bonus);
+            }
+        }
 
         return Random;
-    })();
-    /* Returns a random floating point number between zero and
-     * one. NB: The prototype implementation below just throws an
-     * error, it will be overridden in each Random object when the
-     * seed has been correctly configured. */
-    Random.prototype.random = function() {
-        throw {
-            name:"RandomError",
-            message: "random_error".l()
-        };
-    };
-    /* Returns an integer between the given min and max values,
-     * inclusive. */
-    Random.prototype.randomInt = function(min, max) {
-        return min + Math.floor((max-min+1)*this.random());
-    };
-    /* Returns the result of rolling n dice with dx sides, and adding
-     * plus. */
-    Random.prototype.dice = function(n, dx, plus) {
-        var result = 0;
-        for (var i = 0; i < n; i++) {
-            result += this.randomInt(1, dx);
-        }
-        if (plus) result += plus;
-        return result;
-    };
-    /* Returns the result of rolling n averaging dice (i.e. 6 sided dice
-     * with sides 2,3,3,4,4,5). And adding plus. */
-    Random.prototype.aveDice = (function() {
-        var mapping = [2,3,3,4,4,5];
-        return function(n, plus) {
-            var result = 0;
-            for (var i = 0; i < n; i++) {
-                result += mapping[this.randomInt(0, 5)];
-            }
-            if (plus) result += plus;
-            return result;
-        };
-    })();
-    /* Returns a dice-roll result from the given string dice
-     * specification. The specification should be of the form xdy+z,
-     * where the x component and z component are optional. This rolls
-     * x dice of with y sides, and adds z to the result, the z
-     * component can also be negative: xdy-z. The y component can be
-     * either a number of sides, or can be the special values 'F', for
-     * a fudge die (with 3 sides, +,0,-), '%' for a 100 sided die, or
-     * 'A' for an averaging die (with sides 2,3,3,4,4,5).
-     */
-    Random.prototype.diceString = (function() {
-        var diceRe = /^([1-9][0-9]*)?d([%FA]|[1-9][0-9]*)([-+][1-9][0-9]*)?$/;
-        return function(def) {
-            var match = def.match(diceRe);
-            if (!match) {
-                throw new Error(
-                    "dice_string_error".l({string:def})
-                );
-            }
-
-            var num = match[1]?parseInt(match[1], 10):1;
-            var sides;
-            var bonus = match[3]?parseInt(match[3], 10):0;
-
-            switch (match[2]) {
-            case 'A':
-                return this.aveDice(num, bonus);
-            case 'F':
-                sides = 3;
-                bonus -= num*2;
-                break;
-            case '%':
-                sides = 100;
-                break;
-            default:
-                sides = parseInt(match[2], 10);
-                break;
-            }
-            return this.dice(num, sides, bonus);
-        };
     })();
 
     // -----------------------------------------------------------------------
     // Default Messages
     // -----------------------------------------------------------------------
-    var en = {
+    const en = {
         terrible: "terrible",
         poor: "poor",
         mediocre: "mediocre",
