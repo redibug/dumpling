@@ -1568,6 +1568,23 @@
      * Clicking anywhere finishes the reveal instantly.
      */
     let teletypeState = null;
+    let teletypePendingNodes = null;
+
+    /* Tracks running vanish animations so teletype can wait for them. */
+    let vanishCount = 0;
+    const vanishWaiters = [];
+    const noteVanishStart = function() { vanishCount++; };
+    const noteVanishEnd = function() {
+        if (--vanishCount <= 0) {
+            vanishCount = 0;
+            const ws = vanishWaiters.splice(0);
+            for (const cb of ws) cb();
+        }
+    };
+    const whenVanishDone = function(cb) {
+        if (vanishCount === 0) cb();
+        else vanishWaiters.push(cb);
+    };
 
     const teletypeSplit = function(root) {
         const chars = [];
@@ -1663,7 +1680,10 @@
         }
         if (interactive && window.dumpling.teletype &&
             isVisible($id('content_wrapper'))) {
-            teletypeStart(output);
+            // Defer until scroll + vanish finish (kicked off in
+            // endOutputTransaction).
+            if (!teletypePendingNodes) teletypePendingNodes = [];
+            for (const node of output) teletypePendingNodes.push(node);
         }
         /* We want to scroll this new element to the bottom of the screen.
          * while still being visible. The easiest way is to find the
@@ -1848,6 +1868,12 @@
             }
             scrollPoint = null;
         }
+        // Teletype waits for the scroll + vanish to finish first.
+        if (teletypePendingNodes && teletypePendingNodes.length) {
+            const nodes = teletypePendingNodes;
+            teletypePendingNodes = null;
+            whenVanishDone(function() { teletypeStart(nodes); });
+        }
     };
 
     /* This gets called when a link needs to be followed, regardless
@@ -1973,8 +1999,10 @@
                     // Get fade out speed of options, and slide up speed
                     // variables.
                     contentToHide.forEach(function(element) {
+                        noteVanishStart();
                         fadeSlideUp(element, system.options.fade_speed,
-                                    system.options.slide_up_speed);
+                                    system.options.slide_up_speed,
+                                    noteVanishEnd);
                     });
                 }
             } else {
