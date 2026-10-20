@@ -2122,6 +2122,7 @@
         }
         inputOpen = true;
         $id('content').classList.add('input-locked');
+        lockLinks();
         const form = document.createElement('form');
         form.className = 'dumpling_input';
         const label = document.createElement('label');
@@ -2139,6 +2140,7 @@
             const value = input.value;
             inputOpen = false;
             $id('content').classList.remove('input-locked');
+            unlockLinks();
             // The answered form stays in the log as plain text,
             // much like a used link does.
             const answered = document.createElement('p');
@@ -2283,6 +2285,68 @@
 
     /* Returns HTML from the given content with the non-raw links
      * wired up. */
+    /* Attaches the game click behavior to one link element. */
+    const wireLink = function(a) {
+        const href = a.getAttribute('href');
+        a.addEventListener('click', function(event) {
+            event.preventDefault();
+
+            // While a text input is open, the situation is locked:
+            // links can't be clicked. (They are also swapped for
+            // spans then, so this is a belt-and-braces check.)
+            if (inputOpen) return false;
+
+            // Capture this link's index now: the once-handling
+            // below may replace links (including this one) with
+            // plain text.
+            const index = liveLinks().indexOf(a);
+
+            // If we're a once-click, remove all matching links.
+            if (system.options.all_links_once === false
+                || (system.options.all_links_once === true
+                    && (a.classList.contains("once") ||
+                        href.match(/[?&]once[=&]?/)))) {
+                system.clearLinks(href);
+            }
+
+            processClick(href, index);
+            return false;
+        });
+    };
+
+    /* While a text input is open, live links are swapped for
+     * spans (class locked_link, href kept in data-href), so they
+     * read as plain text and take a text cursor. pointer-events:
+     * none can't do this: it makes the cursor property moot. */
+    const lockLinks = function() {
+        liveLinks().forEach(function(a) {
+            const span = document.createElement('span');
+            for (const attr of a.attributes) {
+                span.setAttribute(attr.name, attr.value);
+            }
+            span.classList.add('locked_link');
+            span.setAttribute('data-href', a.getAttribute('href'));
+            span.innerHTML = a.innerHTML;
+            a.replaceWith(span);
+        });
+    };
+    const unlockLinks = function() {
+        qsa('#content span.locked_link').forEach(function(span) {
+            const a = document.createElement('a');
+            for (const attr of span.attributes) {
+                if (attr.name !== 'data-href') {
+                    a.setAttribute(attr.name, attr.value);
+                }
+            }
+            a.classList.remove('locked_link');
+            a.innerHTML = span.innerHTML;
+            span.replaceWith(a);
+            wireLink(a);
+        });
+    };
+
+    /* Returns HTML from the given content with the non-raw links
+     * wired up. */
     const augmentLinks = function(content) {
         const output = asElements(content);
 
@@ -2293,30 +2357,7 @@
                 if (!a.classList.contains("raw") ||
                     (href && href.match(/[?&]raw[=&]?/))) {
                     if (href && href.match(linkRe)) {
-                        a.addEventListener('click', function(event) {
-                            event.preventDefault();
-
-                            // While a text input is open, the situation
-                            // is locked: links can't be clicked.
-                            if (inputOpen) return false;
-
-                            // Capture this link's index now: the
-                            // once-handling below may replace links
-                            // (including this one) with plain text.
-                            const index = liveLinks().indexOf(a);
-
-                            // If we're a once-click, remove all matching
-                            // links.
-                            if (system.options.all_links_once === false
-                                || (system.options.all_links_once === true
-                                    && (a.classList.contains("once") ||
-                                        href.match(/[?&]once[=&]?/)))) {
-                                system.clearLinks(href);
-                            }
-
-                            processClick(href, index);
-                            return false;
-                        });
+                        wireLink(a);
                     } else {
                         a.classList.add("raw");
                     }
