@@ -371,7 +371,7 @@ dumpling.game.situations = {
                     `<p>You said: <strong>${safe}</strong></p>
                     <p>Let's <a href='hub'>return to the topic
                     list</a>.</p>`);
-            });
+            }, "Say it");
         },
         act: function(character, system, action) {
             if (action === "cheer") {

@@ -903,9 +903,10 @@
          * shown next to the input. The callback is called with the
          * entered value. While the input is open, links can't be
          * clicked. During a replay the value comes from the save
-         * instead of the player. */
-        askForInput(prompt, callback) {
-            doAskForInput(prompt, callback);
+         * instead of the player. The optional buttonText sets the
+         * submit button's label (default: a localized "OK"). */
+        askForInput(prompt, callback, buttonText) {
+            doAskForInput(prompt, callback, buttonText);
         }
 
         /* Turns any links that target the given href into plain
@@ -2112,7 +2113,7 @@
      * callback decides where the value goes. If a replay runs out
      * of tokens at an input, the live form is shown and play
      * continues from there. */
-    const doAskForInput = function(prompt, callback) {
+    const doAskForInput = function(prompt, callback, buttonText) {
         if (replayQueue !== null && replayQueue.length > 0) {
             const token = replayQueue.shift();
             progress.sequence.push(token);
@@ -2129,7 +2130,7 @@
         input.type = 'text';
         const submit = document.createElement('button');
         submit.type = 'submit';
-        submit.textContent = "input_submit".l();
+        submit.textContent = buttonText || "input_submit".l();
         form.append(label, input, submit);
         doWrite(form, null, 'append', 'append');
         input.focus();

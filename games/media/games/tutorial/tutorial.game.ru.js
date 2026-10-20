@@ -348,7 +348,7 @@ dumpling.game.situations = {
                 system.write(
                     `<p>Ты сказал: <strong>${safe}</strong></p>
                     <p>Давай <a href='hub'>вернёмся к списку тем</a>.</p>`);
-            });
+            }, "Сказать");
         },
         act: function(character, system, action) {
             if (action === "cheer") {
