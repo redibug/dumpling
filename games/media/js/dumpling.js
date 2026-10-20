@@ -2322,7 +2322,11 @@
         liveLinks().forEach(function(a) {
             const span = document.createElement('span');
             for (const attr of a.attributes) {
-                span.setAttribute(attr.name, attr.value);
+                // href moves to data-href only: a span has no
+                // business carrying a real one.
+                if (attr.name !== 'href') {
+                    span.setAttribute(attr.name, attr.value);
+                }
             }
             span.classList.add('locked_link');
             span.setAttribute('data-href', a.getAttribute('href'));
@@ -2338,6 +2342,7 @@
                     a.setAttribute(attr.name, attr.value);
                 }
             }
+            a.setAttribute('href', span.getAttribute('data-href'));
             a.classList.remove('locked_link');
             a.innerHTML = span.innerHTML;
             span.replaceWith(a);
