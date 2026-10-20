@@ -350,6 +350,30 @@ dumpling.game.situations = {
         optionText: "Saving and Loading"
     }),
 
+    // A topic that asks the player for text, and says it back.
+    "text-input": new dumpling.Situation({
+        enter: function(character, system, from) {
+            system.write(
+                `<p>Dumpling can ask the player for a line of text.
+                While the input is open, the situation is locked: no
+                links can be clicked until it is answered. The answer
+                is recorded in the save, just like a link click, so it
+                comes back exactly when the save is replayed.</p>
+                <p>Tell me a word, and I'll say it back.</p>`);
+            system.askForInput("Your word:", function(value) {
+                const safe = value.replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                system.write(
+                    `<p>You said: <strong>${safe}</strong></p>
+                    <p>Let's <a href='hub'>return to the topic
+                    list</a>.</p>`);
+            });
+        },
+        tags: ["topic"],
+        displayOrder: 7,
+        optionText: "Text Input"
+    }),
+
     "implicit-boost": new dumpling.SimpleSituation(
         `<p>Your luck has been boosted<span class='transient'>, check the
         list of options to see if they have changed</span>.</p>`,
