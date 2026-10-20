@@ -2600,23 +2600,15 @@
 
         // Handle the save in the URL hash. The URL is always the
         // save: every step rewrites it, so there is no manual save.
+        // The game author chooses which buttons their HTML has;
+        // the engine just wires the ones it finds.
         const erase = $id("erase");
-        erase.addEventListener('click', function() {
-            doErase();
-        });
-        const saveButton = $id("save");
-        if (saveButton) saveButton.style.display = 'none';
-
-        // The in-game Back button (undo), injected so games get it
-        // without editing their HTML.
-        const buttonsBox = qs(".buttons");
-        let backButton = $id("back");
-        if (buttonsBox && !backButton) {
-            backButton = document.createElement('button');
-            backButton.id = 'back';
-            backButton.textContent = "back_button".l();
-            buttonsBox.insertBefore(backButton, buttonsBox.firstChild);
+        if (erase) {
+            erase.addEventListener('click', function() {
+                doErase();
+            });
         }
+        const backButton = $id("back");
         if (backButton) {
             backButton.addEventListener('click', doUndo);
         }
@@ -3062,7 +3054,6 @@
         existing_situation: "You can't override situation {id} in HTML.",
         erase_message: "This will permanently delete this character and immediately return you to the start of the game. Are you sure?",
         save_version_warning: "This save is from game version {save}, but the game is now version {game}. It may not load correctly. Try to load it anyway?",
-        back_button: "Back",
         input_submit: "OK",
         save_load_error: "This save couldn't be fully loaded, because the game has changed since it was made. You can keep playing from here, or erase and start again.",
         no_current_situation: "I can't display, because we don't have a current situation.",
