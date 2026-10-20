@@ -178,6 +178,48 @@ a {
     text-decoration: none;
     border-bottom: 1px solid transparent;
 }
+/* The text input: a ruled line in the book to write on. */
+form.dumpling_input {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6em;
+    margin: 1.2em 0;
+    padding: 0.8em 1em;
+    background: rgba(255,255,255,0.25);
+    border: 1px solid rgba(34,17,0,0.35);
+    border-radius: 4px;
+}
+form.dumpling_input label {
+    font-weight: bold;
+    white-space: nowrap;
+}
+form.dumpling_input input {
+    flex: 1;
+    min-width: 4em;
+    font: inherit;
+    color: #210;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(34,17,0,0.55);
+    padding: 0.1em 0.2em;
+    outline: none;
+}
+form.dumpling_input input:focus {
+    border-bottom: 2px solid #210;
+}
+form.dumpling_input button {
+    font-size: 0.8em;
+    background: #876;
+    color: #e6e6c6;
+    border: none;
+    padding: 0.3em 1.0em;
+    cursor: pointer;
+    border-radius: 4px;
+}
+form.dumpling_input button:hover {
+    background: #987;
+}
+
 /* While a text input is open, links are frozen: they read as
    plain text until the input is answered. */
 #content.input-locked a {
@@ -185,7 +227,7 @@ a {
     border-bottom: none;
     text-shadow: none;
     pointer-events: none;
-    cursor: default;
+    cursor: text;
 }
 a.raw {
     padding-right: 14px;
