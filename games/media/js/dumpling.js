@@ -899,6 +899,16 @@
             processLink(code);
         }
 
+        /* Asks the player for a line of text, with the given prompt
+         * shown next to the input. The callback is called with the
+         * entered value. While the input is open, links can't be
+         * clicked. During a replay the value comes from the save
+         * instead of the player. The optional buttonText sets the
+         * submit button's label (default: a localized "OK"). */
+        askForInput(prompt, callback, buttonText) {
+            doAskForInput(prompt, callback, buttonText);
+        }
+
         /* Turns any links that target the given href into plain
          * text. This can be used to remove action options when an action
          * is no longer available. It is used automatically when you give
@@ -1466,14 +1476,75 @@
     const system = new System();
 
     /* This is the data on the player's progress that gets saved. */
+    /* The save state. The whole save lives in the URL hash:
+     * #<version>:<seed>:<token>,<token>,... so a save is just a
+     * bookmark. Each token is either a link index (the number of
+     * the link clicked, counting the live links on the page) or a
+     * text input value (encodeURIComponent'd). The game state at
+     * each step says which kind to expect, so no marker is needed. */
     let progress = {
-        // A random seed string, used internally to make random
-        // sequences predictable.
+        // A short random seed string, used internally to make
+        // random sequences predictable.
         seed: null,
-        // Keeps track of the links clicked, and when.
-        sequence: [],
-        // The time when the progress was saved.
-        saveTime: null
+        // The tokens recorded so far, in order.
+        sequence: []
+    };
+
+    /* Generates a fresh compact seed (base36, ~6 characters). */
+    const newSeed = function() {
+        return Math.floor(Math.random() * 0x7fffffff).toString(36);
+    };
+
+    /* Builds the URL hash for the current progress. With undo set,
+     * appends the &u flag that marks the next load as an undo (the
+     * flag is stripped again on load). */
+    const buildHash = function(undo) {
+        let hash = '#' + game.version + ':' + progress.seed + ':' +
+            progress.sequence.join(',');
+        if (undo) hash += '&u';
+        return hash;
+    };
+
+    /* Parses a URL hash into {version, seed, tokens, undo}, or
+     * returns null if it isn't a Dumpling save hash. */
+    const parseHash = function(hash) {
+        if (!hash || hash.charAt(0) !== '#') return null;
+        let body = hash.slice(1);
+        let undo = false;
+        if (body.endsWith('&u')) {
+            undo = true;
+            body = body.slice(0, -2);
+        }
+        const parts = body.split(':');
+        if (parts.length !== 3) return null;
+        const tokens = parts[2] === '' ? [] : parts[2].split(',');
+        return {version: parts[0], seed: parts[1], tokens: tokens,
+                undo: undo};
+    };
+
+    /* Syncs the URL to the current progress, without adding a
+     * browser history entry. */
+    const updateHash = function() {
+        history.replaceState(null, '', buildHash(false));
+    };
+
+    /* Records one token (a link index or an input value) and keeps
+     * the URL in sync, so the URL is always a valid bookmark. */
+    const recordToken = function(token) {
+        progress.sequence.push(token);
+        updateHash();
+        updateBackButton();
+    };
+
+    /* Returns the live (clickable) game links currently in the
+     * content, in document order. A link's index in this list is
+     * what gets recorded when it is clicked. */
+    const liveLinks = function() {
+        return qsa('#content a').filter(function(a) {
+            const href = a.getAttribute('href');
+            return href && href.match(linkRe) &&
+                !a.classList.contains('raw');
+        });
     };
 
     /* The Id of the current situation the player is in. */
@@ -1822,11 +1893,6 @@
         scrollStack[scrollStack.length-1] = scrollPoint;
     };
 
-    /* Gets the unique id used to identify saved games. */
-    const getSaveId = function() {
-        return 'undum_'+game.id+"_"+game.version;
-    };
-
     /* Adds the quality blocks to the character tools. */
     const showQualities = function() {
         $id("qualities").replaceChildren();
@@ -2033,8 +2099,59 @@
         // Scroll to the top of the new content.
         endOutputTransaction();
 
-        // We're able to save, if we weren't already.
-        $id("save").disabled = false;
+    };
+
+    /* Whether a text input is currently open. While one is, the
+     * situation is locked: links can't be clicked (see the click
+     * handler in augmentLinks). */
+    let inputOpen = false;
+
+    /* Asks the player for a line of text. Live, this shows a form
+     * in the content and locks the situation until it is answered.
+     * During a replay, the value is pulled from the save instead:
+     * the game deterministically arrives at the same input, and the
+     * callback decides where the value goes. If a replay runs out
+     * of tokens at an input, the live form is shown and play
+     * continues from there. */
+    const doAskForInput = function(prompt, callback, buttonText) {
+        if (replayQueue !== null && replayQueue.length > 0) {
+            const token = replayQueue.shift();
+            progress.sequence.push(token);
+            callback(decodeURIComponent(token));
+            return;
+        }
+        inputOpen = true;
+        $id('content').classList.add('input-locked');
+        lockLinks();
+        const form = document.createElement('form');
+        form.className = 'dumpling_input';
+        const label = document.createElement('label');
+        label.textContent = prompt;
+        const input = document.createElement('input');
+        input.type = 'text';
+        const submit = document.createElement('button');
+        submit.type = 'submit';
+        submit.textContent = buttonText || "input_submit".l();
+        form.append(label, input, submit);
+        doWrite(form, null, 'append', 'append');
+        input.focus();
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const value = input.value;
+            inputOpen = false;
+            $id('content').classList.remove('input-locked');
+            unlockLinks();
+            // The answered form stays in the log as plain text,
+            // much like a used link does.
+            const answered = document.createElement('p');
+            answered.className = 'input_answer';
+            answered.textContent = prompt + ' ' + value;
+            form.replaceWith(answered);
+            recordToken(encodeURIComponent(value));
+            startOutputTransaction();
+            callback(value);
+            endOutputTransaction();
+        });
     };
 
     /* This gets called to actually do the work of processing a code.
@@ -2085,11 +2202,12 @@
     };
 
     /* This gets called when the user clicks a link to carry out an
-     * action. */
-    const processClick = function(code) {
+     * action. The link's index among the live links is recorded in
+     * the save sequence (and so in the URL). */
+    const processClick = function(code, index) {
         const now = (new Date()).getTime() * 0.001;
         system.time = now - startTime;
-        progress.sequence.push({link:code, when:system.time});
+        recordToken(String(index));
         processLink(code);
     };
 
@@ -2167,6 +2285,73 @@
 
     /* Returns HTML from the given content with the non-raw links
      * wired up. */
+    /* Attaches the game click behavior to one link element. */
+    const wireLink = function(a) {
+        const href = a.getAttribute('href');
+        a.addEventListener('click', function(event) {
+            event.preventDefault();
+
+            // While a text input is open, the situation is locked:
+            // links can't be clicked. (They are also swapped for
+            // spans then, so this is a belt-and-braces check.)
+            if (inputOpen) return false;
+
+            // Capture this link's index now: the once-handling
+            // below may replace links (including this one) with
+            // plain text.
+            const index = liveLinks().indexOf(a);
+
+            // If we're a once-click, remove all matching links.
+            if (system.options.all_links_once === false
+                || (system.options.all_links_once === true
+                    && (a.classList.contains("once") ||
+                        href.match(/[?&]once[=&]?/)))) {
+                system.clearLinks(href);
+            }
+
+            processClick(href, index);
+            return false;
+        });
+    };
+
+    /* While a text input is open, live links are swapped for
+     * spans (class locked_link, href kept in data-href), so they
+     * read as plain text and take a text cursor. pointer-events:
+     * none can't do this: it makes the cursor property moot. */
+    const lockLinks = function() {
+        liveLinks().forEach(function(a) {
+            const span = document.createElement('span');
+            for (const attr of a.attributes) {
+                // href moves to data-href only: a span has no
+                // business carrying a real one.
+                if (attr.name !== 'href') {
+                    span.setAttribute(attr.name, attr.value);
+                }
+            }
+            span.classList.add('locked_link');
+            span.setAttribute('data-href', a.getAttribute('href'));
+            span.innerHTML = a.innerHTML;
+            a.replaceWith(span);
+        });
+    };
+    const unlockLinks = function() {
+        qsa('#content span.locked_link').forEach(function(span) {
+            const a = document.createElement('a');
+            for (const attr of span.attributes) {
+                if (attr.name !== 'data-href') {
+                    a.setAttribute(attr.name, attr.value);
+                }
+            }
+            a.setAttribute('href', span.getAttribute('data-href'));
+            a.classList.remove('locked_link');
+            a.innerHTML = span.innerHTML;
+            span.replaceWith(a);
+            wireLink(a);
+        });
+    };
+
+    /* Returns HTML from the given content with the non-raw links
+     * wired up. */
     const augmentLinks = function(content) {
         const output = asElements(content);
 
@@ -2177,21 +2362,7 @@
                 if (!a.classList.contains("raw") ||
                     (href && href.match(/[?&]raw[=&]?/))) {
                     if (href && href.match(linkRe)) {
-                        a.addEventListener('click', function(event) {
-                            event.preventDefault();
-
-                            // If we're a once-click, remove all matching
-                            // links.
-                            if (system.options.all_links_once === false
-                                || (system.options.all_links_once === true
-                                    && (a.classList.contains("once") ||
-                                        href.match(/[?&]once[=&]?/)))) {
-                                system.clearLinks(href);
-                            }
-
-                            processClick(href);
-                            return false;
-                        });
+                        wireLink(a);
                     } else {
                         a.classList.add("raw");
                     }
@@ -2204,14 +2375,12 @@
 
     /* Erases the character in local storage. This is permanent! */
     const doErase = function(force) {
-        const saveId = getSaveId();
-        if (localStorage[saveId]) {
-            if (force || confirm("erase_message".l())) {
-                delete localStorage[saveId];
-                // Reload for a clean state; simpler than resetting
-                // everything in place.
-                location.reload();
-            }
+        if (force || confirm("erase_message".l())) {
+            // The save lives in the URL hash: clear it and reload
+            // for a clean start.
+            history.replaceState(null, '',
+                location.pathname + location.search);
+            location.reload();
         }
     };
 
@@ -2244,15 +2413,16 @@
     };
 
     /* Clear the current game output and start again. */
-    const startGame = function() {
+    const startGame = function(seed) {
         wasLoaded = false;
         teletypeFinish();
         teletypePendingNodes = null;
-        progress.seed = new Date().toString();
+        progress.seed = seed || newSeed();
+        progress.sequence = [];
+        replayQueue = null;
 
         character = new Character();
         system.rnd = new Random(progress.seed);
-        progress.sequence = [{link:game.start, when:0}];
 
         // Empty the display
         $id("content").replaceChildren();
@@ -2265,59 +2435,82 @@
 
         // Do the first state.
         doTransitionTo(game.start);
+        updateHash();
+        updateBackButton();
     };
 
-    /* Saves the character to local storage. */
-    const saveGame = function() {
-        // Store when we're saving the game, to avoid exploits where a
-        // player loads their file to gain extra time.
-        const now = (new Date()).getTime() * 0.001;
-        progress.saveTime = now - startTime;
-
-        // Save the game.
-        localStorage[getSaveId()] = JSON.stringify(progress);
-
-        // Switch the button highlights.
-        $id("erase").disabled = false;
-        $id("save").disabled = true;
-    };
-
-    /* Loads the game from the given data */
+    /* Loads a save parsed from the URL hash, by replaying its
+     * tokens. Link tokens are applied here; text input tokens are
+     * consumed by askForInput while a step runs. If a token can't
+     * be applied (the game has changed since the save was made),
+     * the replay stops there, the player is told, and play
+     * continues live from the state that was reached. */
     let wasLoaded = false;
-    const loadGame = function(characterData) {
+    let replayQueue = null;
+    const loadGame = function(save) {
         wasLoaded = true;
-        progress = characterData;
+        teletypeFinish();
+        teletypePendingNodes = null;
+        progress.seed = save.seed;
+        progress.sequence = [];
+        replayQueue = save.tokens.slice();
 
         character = new Character();
         system.rnd = new Random(progress.seed);
 
         // Empty the display
         $id("content").replaceChildren();
+
+        // Start the game
+        startTime = new Date().getTime() * 0.001;
+        system.time = 0;
+        if (game.init) game.init(character, system);
         showQualities();
 
-        // Now play through the actions so far:
-        if (game.init) game.init(character, system);
-
-        // Run through all the player's history.
+        // Play through the player's history.
         interactive = false;
-        for (let i = 0; i < progress.sequence.length; i++) {
-            const step = progress.sequence[i];
-            // The action must be done at the recorded time.
-            system.time = step.when;
-            processLink(step.link);
+        doTransitionTo(game.start);
+        let failed = false;
+        while (replayQueue.length > 0) {
+            const index = parseInt(replayQueue[0], 10);
+            const links = liveLinks();
+            if (isNaN(index) || index < 0 || index >= links.length) {
+                failed = true;
+                break;
+            }
+            progress.sequence.push(replayQueue.shift());
+            processLink(links[index].getAttribute('href'));
         }
         interactive = true;
-        // Note: we scroll to lastScrollPoint in the title click handler,
-        // once the content is visible. Scrolling here would clamp because
-        // #content_wrapper is still display:none.
+        replayQueue = null;
 
-        // Reverse engineer the start time.
-        const now = new Date().getTime() * 0.001;
-        startTime = now - progress.saveTime;
+        if (failed) {
+            const note = document.createElement('p');
+            note.className = 'save_error';
+            note.textContent = "save_load_error".l();
+            $id('content').appendChild(note);
+        }
 
-        // Because we did the run through non-interactively, now we
-        // need to update the UI.
+        updateHash();
+        updateBackButton();
         showQualities();
+    };
+
+    /* Enables or disables the Back button: there's nothing to
+     * undo before the first recorded step. */
+    const updateBackButton = function() {
+        const back = $id("back");
+        if (back) back.disabled = progress.sequence.length === 0;
+    };
+
+    /* Steps back one recorded token: rewrites the URL without it,
+     * flagged as an undo, and reloads. The load sees the flag and
+     * snaps straight to the state, skipping the title screen. */
+    const doUndo = function() {
+        if (progress.sequence.length === 0) return;
+        progress.sequence.pop();
+        location.hash = buildHash(true).slice(1);
+        location.reload();
     };
 
     // -----------------------------------------------------------------------
@@ -2409,36 +2602,84 @@
     // Load the default theme right away, so the page never flashes unstyled.
     applyThemeStylesheets(currentThemeName);
 
+    /* Shows the game area. With snap set (an undo load), everything
+     * appears instantly and the scroll jumps straight to the newest
+     * situation; otherwise the title click behavior: fades, and an
+     * animated scroll. */
+    const revealGame = function(snap) {
+        teletypeArmed = true;
+        qsa("#content_wrapper, #legal").forEach(function(element) {
+            if (snap) showElement(element);
+            else fadeIn(element, 500);
+        });
+        // On load, show the log instantly (no teletype). On a fresh
+        // start, teletype the first situation.
+        if (!wasLoaded && window.dumpling.teletype) {
+            teletypeStart(Array.from($id('content').childNodes));
+        }
+        // Jump to the first (fresh) or newest (loaded) situation.
+        if (!mobile) {
+            let target = null;
+            if (lastTransactionFirstEl &&
+                document.contains(lastTransactionFirstEl)) {
+                target = docTop(lastTransactionFirstEl);
+            } else if (lastScrollPoint !== null) {
+                target = lastScrollPoint;
+            }
+            if (target !== null) {
+                if (snap) window.scrollTo(0, target);
+                else smoothScrollTo(target);
+            }
+        }
+        if (snap) showElement($id("tools_wrapper"));
+        else fadeIn($id("tools_wrapper"), 2000);
+        $id("title").style.cursor = "default";
+        qsa("#title .click_message").forEach(function(element) {
+            if (snap) element.style.display = 'none';
+            else fadeOut(element, 250);
+        });
+        if (mobile) {
+            slideDown($id("toolbar"), 500);
+            showElement($id("menu"));
+        }
+    };
+
     /* Set up the game when everything is loaded. */
     document.addEventListener('DOMContentLoaded', function() {
         // Compile additional situations from HTML
         loadHTMLSituations();
 
-        // Handle storage.
-        if (hasLocalStorage()) {
-            const erase = $id("erase");
+        // Handle the save in the URL hash. The URL is always the
+        // save: every step rewrites it, so there is no manual save.
+        // The game author chooses which buttons their HTML has;
+        // the engine just wires the ones it finds.
+        const erase = $id("erase");
+        if (erase) {
             erase.addEventListener('click', function() {
                 doErase();
             });
-            const save = $id("save");
-            save.addEventListener('click', saveGame);
+        }
+        const backButton = $id("back");
+        if (backButton) {
+            backButton.addEventListener('click', doUndo);
+        }
 
-            const storedCharacter = localStorage[getSaveId()];
-            if (storedCharacter) {
-                try {
-                    loadGame(JSON.parse(storedCharacter));
-                    save.disabled = true;
-                    erase.disabled = false;
-                } catch(err) {
-                    doErase(true);
-                }
+        const save = parseHash(location.hash);
+        let undoLoad = false;
+        if (save && save.seed) {
+            let loadIt = true;
+            if (save.version !== game.version) {
+                loadIt = confirm("save_version_warning".l({
+                    save: save.version, game: game.version
+                }));
+            }
+            if (loadIt) {
+                loadGame(save);
+                undoLoad = save.undo;
             } else {
-                save.disabled = true;
-                erase.disabled = true;
                 startGame();
             }
         } else {
-            qs(".buttons").innerHTML = "<p>"+"no_local_storage".l()+"</p>";
             startGame();
         }
 
@@ -2450,36 +2691,12 @@
 
         // Show the game when we click on the title.
         $id("title").addEventListener('click', function() {
-            teletypeArmed = true;
-            qsa("#content_wrapper, #legal").forEach(function(element) {
-                fadeIn(element, 500);
-            });
-            // On load, show the log instantly (no teletype). On a fresh
-            // start, teletype the first situation.
-            if (!wasLoaded && window.dumpling.teletype) {
-                teletypeStart(Array.from($id('content').childNodes));
-            }
-            // Jump to the first (fresh) or newest (loaded) situation.
-            if (!mobile) {
-                let target = null;
-                if (lastTransactionFirstEl &&
-                    document.contains(lastTransactionFirstEl)) {
-                    target = docTop(lastTransactionFirstEl);
-                } else if (lastScrollPoint !== null) {
-                    target = lastScrollPoint;
-                }
-                if (target !== null) smoothScrollTo(target);
-            }
-            fadeIn($id("tools_wrapper"), 2000);
-            $id("title").style.cursor = "default";
-            qsa("#title .click_message").forEach(function(element) {
-                fadeOut(element, 250);
-            });
-            if (mobile) {
-                slideDown($id("toolbar"), 500);
-                showElement($id("menu"));
-            }
+            revealGame(false);
         }, {once: true});
+
+        // An undo load skips the title screen entirely and snaps
+        // straight to the replayed state.
+        if (undoLoad) revealGame(true);
 
         // Any point that an option list appears, its options are its
         // first links.
@@ -2887,6 +3104,9 @@
         unknown_situation: "You can't move to an unknown situation: {id}.",
         existing_situation: "You can't override situation {id} in HTML.",
         erase_message: "This will permanently delete this character and immediately return you to the start of the game. Are you sure?",
+        save_version_warning: "This save is from game version {save}, but the game is now version {game}. It may not load correctly. Try to load it anyway?",
+        input_submit: "OK",
+        save_load_error: "This save couldn't be fully loaded, because the game has changed since it was made. You can keep playing from here, or erase and start again.",
         no_current_situation: "I can't display, because we don't have a current situation.",
         no_local_storage: "No local storage available.",
         random_seed_error: "You must provide a valid random seed.",

@@ -328,6 +328,38 @@ dumpling.game.situations = {
         displayOrder: 6,
         optionText: "saving_title".l(),
     }),
+    // Тема, которая запрашивает у игрока текст и показывает его.
+    "text-input": new dumpling.Situation({
+        enter: function(character, system, from) {
+            system.write(
+                `<p>Dumpling может запросить у игрока строку текста.
+                Пока ввод открыт, ситуация заблокирована: ссылки нельзя
+                нажимать, пока ввод не завершён. Ответ записывается в
+                сохранение, как и нажатие ссылки, поэтому при загрузке
+                он воспроизводится точно.</p>
+                <p>Пока ввод открыт, ссылки заморожены и выглядят как
+                обычный текст. Попробуй эту: <a href='./cheer'>ура</a> —
+                ничего не произойдёт, пока не ответишь. После ответа
+                она снова заработает.</p>
+                <p>Скажи мне слово, и я повторю его.</p>`);
+            system.askForInput("Твоё слово:", function(value) {
+                const safe = value.replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                system.write(
+                    `<p>Ты сказал: <strong>${safe}</strong></p>
+                    <p>Давай <a href='hub'>вернёмся к списку тем</a>.</p>`);
+            }, "Сказать");
+        },
+        act: function(character, system, action) {
+            if (action === "cheer") {
+                system.write(`<p>Ты громко кричишь. Ура!</p>`);
+            }
+        },
+        tags: ["topic"],
+        displayOrder: 7,
+        optionText: "Ввод текста"
+    }),
+
     "implicit-boost": new dumpling.SimpleSituation(
         `<p>Ваша Удача была увеличена<span class='transient'>, проверьте список 
         ссылок, вдруг они изменились?</span>.</p>`,

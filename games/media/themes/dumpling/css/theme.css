@@ -198,6 +198,65 @@ a {
     text-decoration: none;
     border-bottom: 1px solid transparent;
 }
+/* The text input: a paper form slip in the book, with a dotted
+   line to write on. */
+form.dumpling_input {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6em;
+    margin: 1.2em 0;
+    padding: 0.9em 1.1em;
+    background: #fdf7fa;
+    border: 1px dashed #c69eb0;
+    border-radius: 12px;
+    -webkit-box-shadow: 0 2px 8px rgba(150,90,115,0.18);
+            box-shadow: 0 2px 8px rgba(150,90,115,0.18);
+}
+form.dumpling_input label {
+    font-weight: 600;
+    color: #8c5069;
+    white-space: nowrap;
+}
+form.dumpling_input input {
+    flex: 1;
+    min-width: 4em;
+    font: inherit;
+    color: #58424e;
+    background: transparent;
+    border: none;
+    border-bottom: 2px dotted #c69eb0;
+    padding: 0.1em 0.2em;
+    outline: none;
+}
+form.dumpling_input input:focus {
+    border-bottom: 2px solid #8c5069;
+}
+form.dumpling_input button {
+    font-family: inherit;
+    font-size: 0.85em;
+    font-weight: 600;
+    background: linear-gradient(to bottom, #c99aaf, #b9839b);
+    color: #fff;
+    border: none;
+    padding: 0.2em 1.0em;
+    cursor: pointer;
+    border-radius: 999px;
+    -webkit-box-shadow: 0 2px 8px rgba(150,90,115,0.35);
+            box-shadow: 0 2px 8px rgba(150,90,115,0.35);
+}
+form.dumpling_input button:hover {
+    background: linear-gradient(to bottom, #b9839b, #a66f88);
+}
+
+/* While a text input is open, live links are swapped for
+   locked_link spans: they read as plain text (with a text
+   cursor) until the input is answered. */
+#content .locked_link {
+    color: inherit;
+    border-bottom: none;
+    text-shadow: none;
+    cursor: text;
+}
 a.raw {
     padding-right: 14px;
     background: transparent url("../img/external_link.png") no-repeat right 4px;
