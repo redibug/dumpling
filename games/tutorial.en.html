@@ -155,28 +155,45 @@
 
       <div id="s_saving">
         <h1>Saving and Loading</h1>
-        <p>The only piece of the UI we haven't talked about is the
-          'Save' and 'Erase' buttons on the left panel. These are only
-          visible if your browser supports client-side data
-          storage. Clicking 'Save' stores your game, so you can pick
-          it up again later. There is currently no 'Load' button, the
-          game loads when the page loads. There is also no way to save
-          multiple games, and select which one you want to play. These
-          are both things I'd like to change in the future.
+        <p>Dumpling saves your game automatically, in the page's
+          own address. Look at the address bar as you play: after
+          the '#', every choice you make is added to the URL. There
+          is no 'Save' button because there is nothing to press:
+          the URL in the address bar <em>is</em> your save.
         </p>
         <p>
-          Potentially your game could generate huge amounts of
-          text. And that would be difficult to store client side
-          (there are unpredictable limits), especially when we move
-          towards having multiple save files. So instead Undum saves
-          your character as the list of links you clicked. Loading a
-          save-file consists of playing through your game again,
-          quickly. This is a beneficial approach for debugging too. It
-          means when you're polishing and correcting typos, you can
-          save and load the game and scroll through the transcript to
-          see your corrections. If we saved the text, your save file
-          would have the error in it and you'd have to manually replay
-          the game to see the correction.
+          That makes a save nothing more than a bookmark. Bookmark
+          the page and you have saved that exact game. Keep as many
+          bookmarks as you like, for as many different games as you
+          like. You can even send the link to a friend, and they
+          will pick up the story exactly where you left it.
+        </p>
+        <p>
+          What the URL holds is the game's version, a random seed,
+          and the list of choices you have made: each link you
+          clicked, recorded as its number among the links on screen
+          at the time, plus any text you typed into an input.
+          Loading a save means playing through those choices again,
+          quickly, to rebuild the game and its transcript. That
+          keeps saves tiny: even a long game is only a few thousand
+          characters of URL. It is a boon for debugging, too. Fix a
+          typo in your game file, reload your bookmark, and the
+          corrected text is what you see. If we saved the text
+          itself, the typo would be baked into every save.
+        </p>
+        <p>
+          Two buttons on the left panel help manage a game in
+          progress. 'Back' undoes your last choice, stepping the
+          game back one move. 'Erase' clears the save from the URL
+          and starts the game fresh.
+        </p>
+        <p>
+          Saves are forgiving. If a bookmark was made by a
+          different version of the game, Dumpling warns you before
+          loading it. And if a choice in the list no longer fits
+          the game, perhaps because a passage changed, loading
+          stops at that point with a note, and you simply carry on
+          playing from there.
         </p>
         <p class='transient'>
           Let's return to the <a href='hub'>topic list</a>.

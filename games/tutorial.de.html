@@ -159,35 +159,54 @@
 
       <div id="s_saving">
         <h1>Speichern, Laden, L&ouml;schen</h1>
-        <p>Was wir bisher noch nicht angesprochen haben, sind 
-	die Schaltfl&auml;chen 'Speichern' und 'L&ouml;schen' im Feld links. 
-	Diese werden nur dann angezeigt, wenn der Browser des Spielers
-	die lokale ('client-side') Speicherung von Daten erlaubt. 
-	Mit einem Klick auf 'Speichern' wird der momentane Spielstand
-	gesichert, so dass man sp&auml;ter an derselben Stelle fortfahren
-	kann. Durch einen Klick auf 'L&ouml;schen' l&ouml;scht man den
-	Spielstand und versetzt das Spiel wieder in den Anfangszustand.
-	Es gibt keinen 'Laden'-Knopf; ein gespeicherter Spielstand wird
-	automatisch geladen, wenn die gesamte Seite aufgerufen wird.
-	Zur Zeit gibt es auch noch keine M&ouml;glichkeit, mehrere
-	Spielst&auml;nde zu speichern und zwischen ihnen auszuw&auml;hlen.
+        <p>Dumpling speichert dein Spiel automatisch, in der
+          Adresse der Seite selbst. Schau dir beim Spielen die
+          Adressleiste an: Nach dem '#' wird jede deiner
+          Entscheidungen an die URL angeh&auml;ngt. Es gibt keinen
+          'Speichern'-Knopf, weil es nichts zu dr&uuml;cken gibt:
+          Die URL in der Adressleiste <em>ist</em> dein Spielstand.
         </p>
         <p>
-	<br>
-          Ein Undum-Spiel kann unter Umst&auml;nden sehr viel Text erzeugen.
-	Das w&uuml;rde zu Schwierigkeiten f&uuml;hren, wenn man alles
-	lokal im Browser speichern wollte (der verf&uuml;gbare Speicherplatz
-	variiert unvorhersehbar), besonders falls in Zukunft mehrere Spielst&auml;nde
-	gespeichert werden sollen. Daher speichert Undum den Spielstand ab, indem
-	es eine Liste der angeklickten Links sichert. Wenn ein Spielstand geladen
-	wird, wird also das Spiel anhand dieser Liste noch einmal schnell durchgespielt.
-	Das ist auch f&uuml;rs Testen und die Fehlerkorrektur n&uuml;tzlich:
-	Wenn du deinen Text durchsiehst und Tippfehler korrigierst, kannst du den
-	Spielstand sichern, die Seite neu laden und durch das Transkript scrollen,
-	um direkt die Verbesserungen zu sehen. Wenn wir stattdessen den kompletten
-	Text abspeicherten, h&auml;tte der gespeicherte Spielstand noch den Fehler
-	und du m&uuml;sstest das gesamte Spiel per Hand noch einmal durchspielen,
-	bis du zur korrigierten Stelle kommst.
+          Ein Spielstand ist also nichts weiter als ein Lesezeichen.
+          Setze ein Lesezeichen auf die Seite, und genau dieses
+          Spiel ist gesichert. Du kannst so viele Lesezeichen haben,
+          wie du willst, f&uuml;r so viele verschiedene Spiele, wie
+          du willst. Du kannst den Link sogar einem Freund schicken,
+          der die Geschichte dann genau dort fortsetzt, wo du
+          aufgeh&ouml;rt hast.
+        </p>
+        <p>
+          In der URL stehen die Version des Spiels, ein
+          zuf&auml;lliger Startwert und die Liste deiner
+          Entscheidungen: jeder angeklickte Link, gespeichert als
+          seine Nummer unter den Links, die zu diesem Zeitpunkt auf
+          dem Bildschirm waren, dazu jeder Text, den du in ein
+          Eingabefeld getippt hast. Einen Spielstand zu laden
+          bedeutet, diese Entscheidungen noch einmal schnell
+          durchzuspielen, um das Spiel und sein Transkript wieder
+          aufzubauen. So bleiben Spielst&auml;nde winzig: Selbst ein
+          langes Spiel sind nur ein paar tausend Zeichen URL. Auch
+          f&uuml;rs Testen ist das n&uuml;tzlich: Korrigiere einen
+          Tippfehler in deiner Spieldatei, lade das Lesezeichen neu,
+          und du siehst den verbesserten Text. W&uuml;rden wir
+          stattdessen den kompletten Text speichern, w&auml;re der
+          Fehler in jedem Spielstand eingebacken.
+        </p>
+        <p>
+          Zwei Schaltfl&auml;chen im Feld links helfen beim laufenden
+          Spiel. 'Zur&uuml;ck' macht deine letzte Entscheidung
+          r&uuml;ckg&auml;ngig und setzt das Spiel einen Zug
+          zur&uuml;ck. 'L&ouml;schen' entfernt den Spielstand aus der
+          URL und startet das Spiel von vorn.
+        </p>
+        <p>
+          Spielst&auml;nde sind nachsichtig. Stammt ein Lesezeichen
+          von einer anderen Version des Spiels, warnt Dumpling dich
+          vor dem Laden. Und falls eine Entscheidung in der Liste
+          nicht mehr zum Spiel passt, etwa weil ein Abschnitt
+          ge&auml;ndert wurde, h&auml;lt das Laden an dieser Stelle
+          mit einem Hinweis an, und du spielst einfach von dort
+          weiter.
         </p>
         <p class='transient'>
           Zeit f&uuml;r den <a href='last'>letzten Abschnitt</a>.
