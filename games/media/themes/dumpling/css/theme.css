@@ -198,6 +198,15 @@ a {
     text-decoration: none;
     border-bottom: 1px solid transparent;
 }
+/* While a text input is open, links are frozen: they read as
+   plain text until the input is answered. */
+#content.input-locked a {
+    color: inherit;
+    border-bottom: none;
+    text-shadow: none;
+    pointer-events: none;
+    cursor: default;
+}
 a.raw {
     padding-right: 14px;
     background: transparent url("../img/external_link.png") no-repeat right 4px;

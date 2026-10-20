@@ -337,6 +337,10 @@ dumpling.game.situations = {
                 нажимать, пока ввод не завершён. Ответ записывается в
                 сохранение, как и нажатие ссылки, поэтому при загрузке
                 он воспроизводится точно.</p>
+                <p>Пока ввод открыт, ссылки заморожены и выглядят как
+                обычный текст. Попробуй эту: <a href='./cheer'>ура</a> —
+                ничего не произойдёт, пока не ответишь. После ответа
+                она снова заработает.</p>
                 <p>Скажи мне слово, и я повторю его.</p>`);
             system.askForInput("Твоё слово:", function(value) {
                 const safe = value.replace(/&/g, "&amp;")
@@ -345,6 +349,11 @@ dumpling.game.situations = {
                     `<p>Ты сказал: <strong>${safe}</strong></p>
                     <p>Давай <a href='hub'>вернёмся к списку тем</a>.</p>`);
             });
+        },
+        act: function(character, system, action) {
+            if (action === "cheer") {
+                system.write(`<p>Ты громко кричишь. Ура!</p>`);
+            }
         },
         tags: ["topic"],
         displayOrder: 7,

@@ -359,6 +359,10 @@ dumpling.game.situations = {
                 links can be clicked until it is answered. The answer
                 is recorded in the save, just like a link click, so it
                 comes back exactly when the save is replayed.</p>
+                <p>While the input is open, links are frozen and read
+                as plain text. Try this <a href='./cheer'>cheer</a>:
+                nothing happens until you have answered. Afterwards it
+                works again.</p>
                 <p>Tell me a word, and I'll say it back.</p>`);
             system.askForInput("Your word:", function(value) {
                 const safe = value.replace(/&/g, "&amp;")
@@ -368,6 +372,11 @@ dumpling.game.situations = {
                     <p>Let's <a href='hub'>return to the topic
                     list</a>.</p>`);
             });
+        },
+        act: function(character, system, action) {
+            if (action === "cheer") {
+                system.write(`<p>You cheer, loudly. Hooray!</p>`);
+            }
         },
         tags: ["topic"],
         displayOrder: 7,

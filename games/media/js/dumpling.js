@@ -2120,6 +2120,7 @@
             return;
         }
         inputOpen = true;
+        $id('content').classList.add('input-locked');
         const form = document.createElement('form');
         form.className = 'dumpling_input';
         const label = document.createElement('label');
@@ -2136,6 +2137,7 @@
             event.preventDefault();
             const value = input.value;
             inputOpen = false;
+            $id('content').classList.remove('input-locked');
             // The answered form stays in the log as plain text,
             // much like a used link does.
             const answered = document.createElement('p');
@@ -2143,7 +2145,9 @@
             answered.textContent = prompt + ' ' + value;
             form.replaceWith(answered);
             recordToken(encodeURIComponent(value));
+            startOutputTransaction();
             callback(value);
+            endOutputTransaction();
         });
     };
 
