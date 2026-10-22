@@ -1706,12 +1706,14 @@
 
             // Actions are built in layers onto a fresh object (so
             // a shared table is never mutated): the table named by
-            // data-actions is the base, div.action texts override
-            // it, and data-action-<name> code attributes override
-            // both. A name clash between the two HTML forms warns:
-            // overriding the shared table per-situation is an
-            // intended pattern, but two declarations side by side
-            // in the same element is likely a mistake.
+            // data-actions is the base, data-action-<name> code
+            // attributes override it, and div.action texts
+            // override both: as real elements they have the
+            // highest visibility, so they win. A name clash
+            // between div.action and a data-action-* attribute
+            // warns: overriding the shared table per-situation is
+            // an intended pattern, but two declarations side by
+            // side in the same element is likely a mistake.
             const actions = {};
             const tableName = attr(situationElement, "data-actions");
             if (tableName) {
@@ -1732,20 +1734,20 @@
                         parseFn(a.value, "character, system, action");
                 }
             }
+            Object.assign(actions, codeActions);
             Object.keys(actionTexts).forEach(function(name) {
                 if (name in codeActions) {
                     console.warn("dumpling: action '" + name +
                                  "' in situation '" + id + "' is " +
                                  "defined by both a div.action and a " +
                                  "data-action-* attribute; the " +
-                                 "attribute wins.");
+                                 "div.action wins.");
                 }
                 const text = actionTexts[name];
                 actions[name] = function(character, system) {
                     system.write(interpolate(text, character, system));
                 };
             });
-            Object.assign(actions, codeActions);
             if (Object.keys(actions).length) opts.actions = actions;
 
             game.situations[id] = new SimpleSituation(content, opts);

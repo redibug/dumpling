@@ -352,15 +352,16 @@ the same object three ways:
   situations).
 
 When more than one is given, they are merged, in that order of
-precedence: the named object is the base, `div.action` elements
-override it, and `data-action-*` attributes override both. The
-merge is made onto a fresh object for each situation, so a shared
-table is never changed by one situation's overrides. Overriding
-the shared table for one situation is an intended pattern (a
-special knock in one room), and is not reported. Defining the same
-action in both a `div.action` and a `data-action-*` attribute,
-however, logs a warning in the console, as it is likely to be a
-mistake; the attribute wins.
+precedence: the named object is the base, `data-action-*`
+attributes override it, and `div.action` elements override both:
+as real elements they have the highest visibility, so they win.
+The merge is made onto a fresh object for each situation, so a
+shared table is never changed by one situation's overrides.
+Overriding the shared table for one situation is an intended
+pattern (a special knock in one room), and is not reported.
+Defining the same action in both a `div.action` and a
+`data-action-*` attribute, however, logs a warning in the
+console, as it is likely to be a mistake; the `div.action` wins.
 
 ### Interpolating Values
 
