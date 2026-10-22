@@ -300,3 +300,119 @@ of `SimpleSituation`.
 If `data-choices` is given, this value can also be specified. If so,
 it is interpreted as an integer and passed to the `maxChoices` option
 of `SimpleSituation`.
+#### data-enter
+
+*Dumpling only.* If defined, this should be the body of a function
+that will be compiled and attached to the situation's `enter`
+method. The content of this attribute will be wrapped with:
+
+    (function(character, system, from) {
+    ... HTML attribute ...
+    })
+
+As in Javascript, the enter function runs *before* the situation's
+content is output, so it can prepare state that the content uses
+(see also "Interpolating Values", below). Long functions do not
+belong in an attribute: keep the attribute to a call, and put the
+function itself in a `<script>` block near the situation.
+
+#### data-exit
+
+*Dumpling only.* As `data-enter`, but wrapped with
+`(function(character, system, to) {...})` and attached to the
+situation's `exit` method, which runs when the player leaves the
+situation.
+
+#### data-act
+
+*Dumpling only.* As `data-enter`, but wrapped with
+`(function(character, system, action) {...})` and attached to the
+situation's `act` method: the fallback that runs for any action
+link (`./action`) that the situation's actions (see below) do not
+handle.
+
+### Actions in HTML
+
+*Dumpling only.* A `SimpleSituation` in Javascript can define an
+`actions` object, mapping action names to functions, or to strings
+of HTML that are output as the response. HTML situations can build
+the same object three ways:
+
+* A child element `<div class="action" data-action="name">` of the
+  situation `div`. Its HTML content is the response text for that
+  action (equivalent to a string value in the Javascript actions
+  object). The element is removed from the situation's content, so
+  it never appears as part of the passage.
+* An attribute `data-action-name="..."` on the situation `div`,
+  whose value is the body of a function wrapped with
+  `(function(character, system, action) {...})`, like the other
+  code attributes.
+* An attribute `data-actions="name"`, naming an object defined in
+  a `<script>` (for example a table of actions shared by many
+  situations).
+
+When more than one is given, they are merged, in that order of
+precedence: the named object is the base, `div.action` elements
+override it, and `data-action-*` attributes override both. The
+merge is made onto a fresh object for each situation, so a shared
+table is never changed by one situation's overrides. Overriding
+the shared table for one situation is an intended pattern (a
+special knock in one room), and is not reported. Defining the same
+action in both a `div.action` and a `data-action-*` attribute,
+however, logs a warning in the console, as it is likely to be a
+mistake; the attribute wins.
+
+### Interpolating Values
+
+*Dumpling only.* The automatic content of a situation — its
+content, its heading, and its `div.action` responses — can contain
+expressions in double curly braces:
+
+    <p>Hello {{character.sandbox.name}}.</p>
+
+When the content is output, each expression is evaluated as
+Javascript, with `character` and `system` in scope, and the result
+is inserted into the text. Results are HTML-escaped, so a value
+that comes from the player (such as a name they typed) cannot
+inject markup into the page. Triple braces, `{{{expression}}}`,
+insert the result unescaped; use those only for values you
+trust. An expression that evaluates to `undefined` or `null`
+inserts nothing. An expression that throws an error is left in
+the output as-is, so you can see and fix it while testing.
+
+Interpolation happens each time the content is output, against
+the character's current state — including during the replay of a
+saved game — so expressions must follow the same determinism
+rules as all other game code (see the Loading and Saving
+document). Text output with `system.write` from Javascript is
+*not* interpolated: in Javascript you have template literals.
+
+### External Content Files
+
+*Dumpling only.* A large game need not keep all of its HTML in
+the main page. Declare additional content files in the page's
+`<head>`:
+
+    <link rel="dumpling-content" href="content/chapter1.html">
+    <link rel="dumpling-content" href="content/chapter2.html">
+
+Before the game starts, Dumpling fetches each file and inserts
+its fragments into the page's content library (the element with
+id `content_library`, created hidden if your page does not have
+one). Situations defined in those files are then compiled exactly
+like situations in the main page, so ids must be unique across
+all files. If a file cannot be loaded, the game does not start,
+and the title screen shows an error: a game missing a chapter
+should fail loudly at the door, not halfway through.
+
+Because the files are fetched, the game must be served over HTTP
+— content files do not load from `file://` pages.
+
+Fragments are inserted in a way that keeps any inline `<script>`
+elements in them alive: a script in a content file runs when the
+file is loaded, before the game starts, so content files can
+define helper functions (or shared action tables) that their
+situations use. Scripts loaded from a separate file with a `src`
+attribute are discouraged in content files: unlike inline
+scripts, they load asynchronously, so code that depends on them
+may run before they arrive.

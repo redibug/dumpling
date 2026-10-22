@@ -532,17 +532,21 @@
         enter(character, system, from) {
             if (this.heading) {
                 if (typeof this.heading === 'function') {
-                    system.writeHeading(this.heading());
+                    system.writeHeading(
+                        interpolate(this.heading(), character, system));
                 } else {
-                    system.writeHeading(this.heading);
+                    system.writeHeading(
+                        interpolate(this.heading, character, system));
                 }
             }
             if (this._enter) this._enter(character, system, from);
             if (this.content) {
                 if (typeof this.content === 'function') {
-                    system.write(this.content());
+                    system.write(interpolate(
+                        this.content(), character, system));
                 } else {
-                    system.write(this.content);
+                    system.write(interpolate(
+                        this.content, character, system));
                 }
             }
             if (this.choices) {
@@ -564,6 +568,9 @@
         optionText(character, system, sitn) {
             const parentResult = super.optionText(character, system, sitn);
             if (parentResult === undefined) {
+                if (typeof this.heading === 'string') {
+                    return interpolate(this.heading, character, system);
+                }
                 return this.heading;
             } else {
                 return parentResult;
@@ -1599,15 +1606,57 @@
         }
     };
 
-    const parseFn = function(str) {
+    const parseFn = function(str, params) {
         if (str === undefined) {
             return str;
         } else {
-            const fstr = "(function(character, system, situation) {\n" +
-                str + "\n})";
+            const fstr = "(function(" +
+                (params || "character, system, situation") +
+                ") {\n" + str + "\n})";
             const fn = eval(fstr);
             return fn;
         }
+    };
+
+    /* Mustache-style interpolation for automatic content:
+     * {{expr}} evaluates the expression (with character and system
+     * in scope) and inserts the result HTML-escaped; {{{expr}}}
+     * inserts it raw. An expression that returns undefined or
+     * null inserts nothing; one that throws is left in the text
+     * as-is, so the author sees it while testing. */
+    const escapeHTML = function(text) {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    };
+    const interpolationCache = new Map();
+    const compileInterpolation = function(expr) {
+        let fn = interpolationCache.get(expr);
+        if (!fn) {
+            fn = eval("(function(character, system) {\nreturn (" +
+                      expr + ");\n})");
+            interpolationCache.set(expr, fn);
+        }
+        return fn;
+    };
+    const interpolate = function(text, character, system) {
+        if (typeof text !== 'string' || !text.includes('{{')) {
+            return text;
+        }
+        return text.replace(
+            /\{\{\{([\s\S]*?)\}\}\}|\{\{([\s\S]*?)\}\}/g,
+            function(match, rawExpr, escExpr) {
+                const raw = rawExpr !== undefined;
+                const expr = (raw ? rawExpr : escExpr).trim();
+                try {
+                    const value = compileInterpolation(expr)(
+                        character, system);
+                    if (value === undefined || value === null) return '';
+                    return raw ? String(value) : escapeHTML(String(value));
+                } catch (err) {
+                    return match;
+                }
+            });
     };
 
     const loadHTMLSituations = function() {
@@ -1615,6 +1664,19 @@
             const id = attr(situationElement, "id");
             assert(game.situations[id] === undefined,
                    "existing_situation".l({id:id}));
+
+            // Action responses declared as child elements:
+            // <div class="action" data-action="cheer">...</div>.
+            // The element's HTML is the response for that action;
+            // the element is lifted out of the situation's content.
+            const actionTexts = {};
+            [...situationElement.children].forEach(function(child) {
+                if (child.classList.contains("action")) {
+                    const name = attr(child, "data-action");
+                    if (name) actionTexts[name] = child.innerHTML;
+                    child.remove();
+                }
+            });
 
             const content = situationElement.innerHTML;
             const opts = {
@@ -1627,6 +1689,13 @@
                 displayOrder: parse(attr(situationElement,
                                          "data-display-order")),
                 tags: parseList(attr(situationElement, "data-tags"), false),
+                // Hooks, with the same signatures as in Javascript.
+                enter: parseFn(attr(situationElement, "data-enter"),
+                               "character, system, from"),
+                exit: parseFn(attr(situationElement, "data-exit"),
+                              "character, system, to"),
+                act: parseFn(attr(situationElement, "data-act"),
+                             "character, system, action"),
                 // Simple Situation content.
                 heading: attr(situationElement, "data-heading"),
                 choices: parseList(attr(situationElement, "data-choices"),
@@ -1634,6 +1703,50 @@
                 minChoices: parse(attr(situationElement, "data-min-choices")),
                 maxChoices: parse(attr(situationElement, "data-max-choices"))
             };
+
+            // Actions are built in layers onto a fresh object (so
+            // a shared table is never mutated): the table named by
+            // data-actions is the base, div.action texts override
+            // it, and data-action-<name> code attributes override
+            // both. A name clash between the two HTML forms warns:
+            // overriding the shared table per-situation is an
+            // intended pattern, but two declarations side by side
+            // in the same element is likely a mistake.
+            const actions = {};
+            const tableName = attr(situationElement, "data-actions");
+            if (tableName) {
+                let table;
+                try {
+                    table = eval(tableName);
+                } catch (err) {
+                    console.warn("dumpling: data-actions table '" +
+                                 tableName + "' not found (situation '" +
+                                 id + "')");
+                }
+                if (table) Object.assign(actions, table);
+            }
+            const codeActions = {};
+            for (const a of situationElement.attributes) {
+                if (a.name.startsWith("data-action-")) {
+                    codeActions[a.name.slice("data-action-".length)] =
+                        parseFn(a.value, "character, system, action");
+                }
+            }
+            Object.keys(actionTexts).forEach(function(name) {
+                if (name in codeActions) {
+                    console.warn("dumpling: action '" + name +
+                                 "' in situation '" + id + "' is " +
+                                 "defined by both a div.action and a " +
+                                 "data-action-* attribute; the " +
+                                 "attribute wins.");
+                }
+                const text = actionTexts[name];
+                actions[name] = function(character, system) {
+                    system.write(interpolate(text, character, system));
+                };
+            });
+            Object.assign(actions, codeActions);
+            if (Object.keys(actions).length) opts.actions = actions;
 
             game.situations[id] = new SimpleSituation(content, opts);
         });
@@ -2644,8 +2757,65 @@
         }
     };
 
-    /* Set up the game when everything is loaded. */
+    /* Fetches the external content files declared with
+     * <link rel="dumpling-content" href="..."> and inserts their
+     * fragments into the content library, so situations defined
+     * there compile like in-page ones. Fragments are built with
+     * createContextualFragment (not innerHTML) so that inline
+     * <script> elements in the files run. Returns false when a
+     * file fails to load: without its content the game cannot be
+     * trusted, so it does not start. */
+    const loadExternalContent = async function() {
+        const links = qsa('link[rel="dumpling-content"]');
+        if (!links.length) return true;
+        let library = $id('content_library');
+        if (!library) {
+            library = document.createElement('div');
+            library.id = 'content_library';
+            library.style.display = 'none';
+            document.body.appendChild(library);
+        }
+        try {
+            const texts = await Promise.all(links.map(
+                async function(link) {
+                    const response = await fetch(link.href);
+                    if (!response.ok) throw new Error(link.href);
+                    return response.text();
+                }));
+            texts.forEach(function(html) {
+                const fragment = document.createRange()
+                    .createContextualFragment(html);
+                library.appendChild(fragment);
+            });
+        } catch (err) {
+            console.error("dumpling: failed to load content", err);
+            const msg = qs(".click_message");
+            if (msg) {
+                msg.textContent = "failed_to_load_content".l({
+                    error: err.message
+                });
+                showElement(msg);
+            }
+            return false;
+        }
+        return true;
+    };
+
+    /* Set up the game when everything is loaded. External
+     * content files are fetched first; a boot failure is
+     * rethrown as an ordinary page error rather than surfacing
+     * as an unhandled promise rejection. */
     document.addEventListener('DOMContentLoaded', function() {
+        (async function() {
+            if (!await loadExternalContent()) return;
+            bootGame();
+        })().catch(function(err) {
+            console.error(err);
+            setTimeout(function() { throw err; }, 0);
+        });
+    });
+
+    const bootGame = function() {
         // Compile additional situations from HTML
         loadHTMLSituations();
 
@@ -2755,7 +2925,7 @@
         // Handle display of the menu and resizing: used on mobile
         // devices and an small screens.
         initMenu();
-    });
+    };
 
     const initMenu = function() {
         const menu = $id("menu");
@@ -3107,6 +3277,7 @@
         save_version_warning: "This save is from game version {save}, but the game is now version {game}. It may not load correctly. Try to load it anyway?",
         input_submit: "OK",
         save_load_error: "This save couldn't be fully loaded, because the game has changed since it was made. You can keep playing from here, or erase and start again.",
+        failed_to_load_content: "Could not load game content: {error}. The game cannot start.",
         no_current_situation: "I can't display, because we don't have a current situation.",
         no_local_storage: "No local storage available.",
         random_seed_error: "You must provide a valid random seed.",
