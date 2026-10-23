@@ -557,7 +557,10 @@
             }
         }
         act(character, system, action) {
-            const response = this.actions[action];
+            // this.actions may be undefined when a situation declares
+            // no actions (e.g. an HTML situation with only data-act):
+            // the lookup must not throw before the _act fallback runs.
+            const response = this.actions && this.actions[action];
             try {
                 response(character, system, action);
             } catch (err) {
