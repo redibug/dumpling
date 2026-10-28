@@ -294,10 +294,33 @@ body {
     display: none;
 }
 
-/* --- log mode --- */
+/* --- log mode ---
+   The bar and the log stack in flow rather than overlaying: the
+   bar takes its natural height (which depends on the shell — a
+   character panel can make it two rows tall), and the log fills
+   what is left below it. The guessed `top` offset this replaces
+   always loses to some shell; in flow there is nothing to guess.
+   (#tools_wrapper is a child of #page in the shell, not of
+   #mid_panel, so the column is built on #page.) */
+body:has(#vn-log-toggle:checked) #page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+body:has(#vn-log-toggle:checked) #tools_wrapper {
+    position: static;
+    flex: none;
+}
+body:has(#vn-log-toggle:checked) #mid_panel {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
 body:has(#vn-log-toggle:checked) #content_wrapper {
-    top: 3.2em;
-    bottom: 0;
+    position: static;
+    flex: 1;
+    min-height: 0;
     max-height: none;
 }
 body:has(#vn-log-toggle:checked) #content > * {
