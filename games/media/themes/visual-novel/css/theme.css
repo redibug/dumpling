@@ -162,15 +162,23 @@ body {
     margin-left: 0.4em;
 }
 
-/* Message box: fixed bottom sheet. display:none here is fine — the
+/* Message box: bottom sheet. display:none here is fine — the
    engine's showElement() sets an inline display on reveal, which
-   wins over the stylesheet, and every other property here survives. */
+   wins over the stylesheet, and every other property here survives.
+   Deliberately position:absolute with NO z-index: a fixed element
+   (or any z-index) makes this wrapper a stacking context, and the
+   scene figure inside it could then never paint below the
+   wrapper's own background — a negative z-index on the figure
+   would only sink it within the box, over the tint. As an absolute
+   z-index:auto box it forms no context, so the figure's
+   z-index: -1 reaches the root context and the scene lands behind
+   the box, tint and all. With the body at 100vh and unscrollable,
+   absolute anchors to the same viewport rect fixed would. */
 #content_wrapper {
-    position: fixed;
+    position: absolute;
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 10;
     max-height: 48vh;
     overflow-y: auto;
     background: rgba(24, 14, 22, 0.92);
@@ -265,7 +273,7 @@ body {
     display: block;
     position: fixed;
     inset: 0;
-    z-index: 0;
+    z-index: -1; /* behind the message box — see #content_wrapper */
     background-color: #1a1218;
     background-image: var(--vn-portrait, none), var(--vn-bg, none);
     background-repeat: no-repeat, no-repeat;
