@@ -181,17 +181,27 @@ body {
     bottom: 0;
     max-height: 48vh;
     overflow-y: auto;
-    background: rgba(24, 14, 22, 0.92);
-    border-top: 2px solid rgba(232, 183, 205, 0.55);
-    padding: 1.2em 1.5em 1.5em;
     box-sizing: border-box;
     display: none; /* shown by the engine on reveal */
 }
+/* The box's tint, border and padding live here, on #content, not
+   on the wrapper — on purpose. revealGame fades the wrapper in
+   with an opacity animation, and any element whose opacity is
+   below 1 becomes a stacking context for the duration. If the
+   tint were the wrapper's own background it would paint at the
+   bottom of that temporary context, under the scene figure, and
+   the box would lose its backing for the length of every fade-in
+   (then pop back). As an in-flow block background on #content it
+   paints above the figure's negative z-index inside any context,
+   and above it in the root context the rest of the time — so the
+   tint holds during fades and at rest alike. The centred text
+   column the old max-width gave is kept with calc() padding. */
 #content {
     display: flex;
     flex-direction: column;
-    max-width: 48em;
-    margin: 0 auto;
+    background: rgba(24, 14, 22, 0.92);
+    border-top: 2px solid rgba(232, 183, 205, 0.55);
+    padding: 1.2em max(1.5em, calc((100% - 48em) / 2)) 1.5em;
 }
 #content p {
     margin: 0 0 0.7em 0;
