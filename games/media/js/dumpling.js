@@ -1671,13 +1671,19 @@
 
     const teletypeHide = function(el) {
         el.classList.add('tt-unit');
-        const fadeMs = window.dumpling.teletypeFading;
-        el.style.cssText += 'opacity:0;transition:opacity ' + fadeMs +
-                            'ms ease;pointer-events:none;';
+        // No transition on the hide: block units (headings, list
+        // items, lists, images) are hidden after insertion, and a
+        // style flush in doWrite (the isVisible check) can give them
+        // a rendered before-change opacity of 1 — a transition here
+        // would then animate the hide into a visible fade-out
+        // flash. The fade belongs to the reveal only (teletypeShow).
+        el.style.cssText += 'opacity:0;pointer-events:none;';
     };
     const teletypeShow = function(el) {
         el.classList.add('tt-on');
-        el.style.cssText += TT_SHOWN;
+        const fadeMs = window.dumpling.teletypeFading;
+        el.style.cssText += 'transition:opacity ' + fadeMs +
+                            'ms ease;' + TT_SHOWN;
     };
 
     /* Collects reveal units in document order. Headings and list items
