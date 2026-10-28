@@ -2579,37 +2579,60 @@
      * measures layout, so it must not outrun the sheets. */
     let themeStylesReady = Promise.resolve();
 
+    /* A promise that settles when a stylesheet link finishes, one
+     * way or the other. Links declared in the HTML have usually
+     * loaded before this script even runs (a classic script waits
+     * for earlier stylesheets), so check for a sheet first. */
+    const watchStylesheet = function(link) {
+        if (link.sheet) return Promise.resolve();
+        return new Promise(function(resolve) {
+            link.addEventListener('load', resolve);
+            link.addEventListener('error', resolve);
+        });
+    };
+
     const applyThemeStylesheets = function(name) {
         const head = document.head ||
             document.getElementsByTagName('head')[0];
-        qsa('link[data-dumpling-theme]').forEach(function(link) {
-            link.remove();
+        // Adopt any links already in the document for this theme —
+        // a shell can declare its theme with real <link> tags, which
+        // also keeps the first paint styled — and drop links for
+        // other themes. Inject only when the theme isn't declared.
+        const declared = qsa('link[data-dumpling-theme]');
+        const adopted = declared.filter(function(link) {
+            return link.getAttribute('data-dumpling-theme') === name;
         });
-        const main = document.createElement('link');
-        main.rel = 'stylesheet';
-        main.media = 'screen';
-        main.href = themeStylesheetBase + name + '/css/theme.css';
-        main.setAttribute('data-dumpling-theme', name);
-        const mobile = document.createElement('link');
-        mobile.rel = 'stylesheet';
-        mobile.media = 'only screen and (max-width: 640px)';
-        mobile.href = themeStylesheetBase + name + '/css/theme-mobile.css';
-        mobile.setAttribute('data-dumpling-theme', name);
-        const pending = [];
-        const watch = function(link) {
-            pending.push(new Promise(function(resolve) {
-                link.addEventListener('load', resolve);
-                link.addEventListener('error', resolve);
-            }));
-        };
-        watch(main);
-        watch(mobile);
-        head.appendChild(main);
-        head.appendChild(mobile);
-        themeStylesReady = Promise.all(pending);
+        declared.forEach(function(link) {
+            if (!adopted.includes(link)) link.remove();
+        });
+        let links = adopted;
+        if (!links.length) {
+            const main = document.createElement('link');
+            main.rel = 'stylesheet';
+            main.media = 'screen';
+            main.href = themeStylesheetBase + name + '/css/theme.css';
+            main.setAttribute('data-dumpling-theme', name);
+            const mobile = document.createElement('link');
+            mobile.rel = 'stylesheet';
+            mobile.media = 'only screen and (max-width: 640px)';
+            mobile.href = themeStylesheetBase + name + '/css/theme-mobile.css';
+            mobile.setAttribute('data-dumpling-theme', name);
+            head.appendChild(main);
+            head.appendChild(mobile);
+            links = [main, mobile];
+        }
+        themeStylesReady = Promise.all(links.map(watchStylesheet));
     };
 
+    /* The initial theme: whatever the shell declares with its
+     * <link> tags, else the default. */
     let currentThemeName = 'dumpling';
+    const declaredTheme =
+        document.querySelector('link[data-dumpling-theme]');
+    if (declaredTheme) {
+        currentThemeName =
+            declaredTheme.getAttribute('data-dumpling-theme');
+    }
     Object.defineProperty(window.dumpling, 'theme', {
         enumerable: true,
         configurable: true,
@@ -2620,7 +2643,8 @@
             applyThemeStylesheets(name);
         }
     });
-    // Load the default theme right away, so the page never flashes unstyled.
+    // Make sure the initial theme's stylesheets are in place (a
+    // no-op when the shell declared them itself).
     applyThemeStylesheets(currentThemeName);
 
     /* Shows the game area. With snap set (an undo load), everything

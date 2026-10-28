@@ -12,16 +12,31 @@ The CSS lives in its own `css/` folder so the relative `../img/` and
 layout. `media/img/` holds shared assets (like `external_link.png`)
 that every theme can use via `../../img/...`.
 
-Game authors pick a theme in their game file:
+Game authors declare a theme in the shell HTML, with real
+`<link>` tags in the `<head>`:
+
+```html
+<link rel="stylesheet" media="screen" href="media/themes/dumpling/css/theme.css" data-dumpling-theme="dumpling">
+<link rel="stylesheet" media="only screen and (max-width: 640px)" href="media/themes/dumpling/css/theme-mobile.css" data-dumpling-theme="dumpling">
+```
+
+Declaring the theme in the HTML keeps the page styled from the
+very first paint: a head stylesheet is render-blocking, while a
+stylesheet added by script can only arrive after the script
+does — which flashes the unstyled page on slow loads. The
+engine adopts declared links and takes its initial theme from
+them.
+
+A game can still set the theme in its game file, which is how a
+game switches themes at runtime:
 
 ```js
 dumpling.theme = "dumpling";
 ```
 
-The default is `dumpling`. The engine injects the theme's
-stylesheets as soon as the game sets the theme (or immediately at load
-for the default), so the page never flashes unstyled. Setting
-`dumpling.theme` again later swaps the stylesheets live.
+With no declaration in the HTML, the engine injects the
+stylesheets itself (the default theme is `dumpling`). Setting
+`dumpling.theme` to the already-active theme is a no-op.
 
 Built-in themes:
 

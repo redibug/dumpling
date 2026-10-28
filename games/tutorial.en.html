@@ -6,8 +6,13 @@
     <title>Dumpling</title>
     <!-- End of Game Title -->
 
-    <!-- Dumpling injects the theme stylesheets itself (see dumpling.theme).
-         Themes live in media/themes/<name>/ with theme.css and theme-mobile.css. -->
+    <!-- The theme is declared here, with real <link> tags, so the
+         page is styled from the first paint. Themes live in
+         media/themes/<name>/ with theme.css and theme-mobile.css.
+         The engine adopts these links; dumpling.theme in the game
+         file still works for switching themes at runtime. -->
+    <link rel="stylesheet" media="screen" href="media/themes/dumpling/css/theme.css" data-dumpling-theme="dumpling">
+    <link rel="stylesheet" media="only screen and (max-width: 640px)" href="media/themes/dumpling/css/theme-mobile.css" data-dumpling-theme="dumpling">
 
     <!-- Suppport for mobile devices. -->
     <meta name="viewport" content="user-scalable=no, width=device-width">
