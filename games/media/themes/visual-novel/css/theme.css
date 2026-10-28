@@ -1,0 +1,311 @@
+/* Visual-novel theme for Dumpling — theme-only, no engine changes.
+   Pick it with: dumpling.theme = "visual-novel";
+
+   How it works, in one paragraph: the engine writes every turn as a
+   flat stream of siblings inside #content, and clones an <hr> in as
+   the first write of each turn (see dumpling.js,
+   continueOutputTransaction). On a transition it also freezes the
+   old situation's links into plain spans — every link except
+   .sticky ones — so the current situation can be recognised in pure
+   CSS as the group that still holds live links: the current-beat
+   rule below hides everything that does not come after the last
+   <hr> preceding a live link. Action responses therefore stay
+   visible alongside their situation instead of replacing it. The
+   <hr> separators themselves stay hidden — they are only anchors.
+   The choice list is pinned to the bottom of the message box with
+   flex order, below any action responses (they append after the
+   choice list in the DOM, not before it).
+
+   Scenes: a situation opens with <figure class="scene"> and sets its
+   layers through CSS variables, e.g.
+     <figure class="scene" style="--vn-bg:url(bg.jpg); --vn-portrait:url(alice.png)"></figure>
+   Only the last figure is ever displayed, as a fixed full-screen
+   backdrop. Older figures are display:none, and browsers do not
+   fetch background images for display:none elements — so old scenes
+   are never loaded, which is the whole point of using CSS backgrounds
+   instead of <img> tags (img elements fetch eagerly, always).
+
+   Log mode: the author's shell must include the checkbox hack —
+     <input type="checkbox" id="vn-log-toggle">
+     <label for="vn-log-toggle">Log</label>
+   inside #tools_wrapper (see the demo shell and README). Checking it
+   lifts the current-beat hiding and turns the message box into a full
+   scrolling history. Figures stay hidden in log mode except the last
+   one, so opening the log still does not fetch old scene art.
+
+   Known limits (all theme-level, none blockers):
+   - The title block is hidden after the title is clicked, using the
+     engine's own signal: revealGame fades the .click_message out and
+     sets it display:none inline. If that hook ever changes, the title
+     stays visible at the top instead of vanishing — the game still
+     works, it just looks less like a VN.
+   - Log mode opens at the top of the history; CSS alone cannot scroll
+     it to the bottom.
+   - Actions clicked while still in the very first situation fall
+     back to per-turn display — its candidate set is empty, and the
+     hr:first-of-type sentinel in the rule keeps that graceful.
+   - A sticky action link clicked from an old (hidden) group writes its
+     response into that old group, so it stays hidden until log mode.
+   - Modern browsers only: :has() and :nth-last-child(of) (2023+).
+   - #legal is hidden: put credits on the title splash instead. */
+
+body {
+    margin: 0;
+    background: #141017;
+    color: #f5eef2;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 18px;
+    line-height: 1.6em;
+    overflow: hidden;
+    height: 100vh;
+}
+
+#page, #mid_panel {
+    margin: 0;
+}
+
+/* Title splash: full-screen, centred. The engine shows it, and the
+   click on it is what reveals the game, so it must stay visible
+   until that click happens. */
+#title {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #141017;
+    cursor: pointer;
+    text-align: center;
+}
+#title .label {
+    max-width: 28em;
+    padding: 2em;
+}
+#title h1 {
+    font-size: 2em;
+    line-height: 1.3em;
+    margin: 0 0 0.5em 0;
+}
+#title h2 {
+    font-size: 1em;
+    font-weight: normal;
+    color: #c9a8bd;
+}
+#title .click_message {
+    font-style: italic;
+    color: #e8b7cd;
+}
+/* After the click, the engine sets .click_message display:none
+   inline — that is our signal to drop the splash entirely. */
+#title:has(.click_message[style*="display: none"]) {
+    display: none;
+}
+
+/* Slim top bar: Back / Erase plus the log toggle. The engine shows
+   #tools_wrapper on reveal (display:block inline), so this sheet
+   must not set display:none itself. */
+#tools_wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    padding: 0.5em 1em;
+    background: rgba(10, 6, 12, 0.65);
+    font-size: 0.85em;
+    display: none; /* shown by the engine on reveal */
+}
+#tools_wrapper .tools {
+    display: inline-block;
+}
+#info_panel h1, #info_panel p {
+    display: none;
+}
+#character_panel {
+    display: none;
+}
+#vn-logbar {
+    display: inline-block;
+    margin-left: 1em;
+}
+#vn-logbar label {
+    cursor: pointer;
+    color: #e8b7cd;
+    border: 1px solid rgba(232, 183, 205, 0.6);
+    border-radius: 999px;
+    padding: 0.15em 0.9em;
+}
+#vn-logbar input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+#vn-logbar input:checked + label {
+    background: #e8b7cd;
+    color: #241420;
+}
+.buttons {
+    display: inline-block;
+}
+.buttons button {
+    font: inherit;
+    font-size: 0.9em;
+    background: transparent;
+    color: #e8b7cd;
+    border: 1px solid rgba(232, 183, 205, 0.6);
+    border-radius: 999px;
+    padding: 0.15em 0.9em;
+    cursor: pointer;
+}
+.buttons button + button {
+    margin-left: 0.4em;
+}
+
+/* Message box: fixed bottom sheet. display:none here is fine — the
+   engine's showElement() sets an inline display on reveal, which
+   wins over the stylesheet, and every other property here survives. */
+#content_wrapper {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    max-height: 48vh;
+    overflow-y: auto;
+    background: rgba(24, 14, 22, 0.92);
+    border-top: 2px solid rgba(232, 183, 205, 0.55);
+    padding: 1.2em 1.5em 1.5em;
+    box-sizing: border-box;
+    display: none; /* shown by the engine on reveal */
+}
+#content {
+    display: flex;
+    flex-direction: column;
+    max-width: 48em;
+    margin: 0 auto;
+}
+#content p {
+    margin: 0 0 0.7em 0;
+}
+#content p:last-child {
+    margin-bottom: 0;
+}
+#content a {
+    color: #ffb9d2;
+}
+
+/* --- the current-beat rule ---
+   The anchor is the last <hr> that comes before a live link, where
+   "live" means a non-sticky, non-raw <a>: on transition the engine
+   replaces every other old link with a span.ex_link, so only the
+   current situation's content contains one. Everything that is not
+   after that <hr> is hidden. The rule is inverted on purpose —
+   elements after the anchor are never force-shown, they are simply
+   not targeted, so nothing hidden by the engine or another rule
+   can be revealed by accident. If no live link exists anywhere
+   (an open text input has swapped the links for spans, or a room
+   whose exits are all sticky), no <hr> is excluded and the anchor
+   falls back to the last <hr> in the document — plain per-turn
+   behaviour. One degenerate case needed a guard: while the
+   player is still in the first situation (whose group starts at
+   the very top of #content — see below), every <hr> comes from
+   its own actions and so follows a live link, which would leave
+   the candidate set empty, the anchor matching nothing, and the
+   inverted rule hiding everything. CSS cannot gate the rule on
+   "a candidate exists" (that takes :has() around the anchor, and
+   :has() may not be nested), so the candidate list also admits
+   hr:first-of-type as a sentinel. A real candidate always comes
+   after the first <hr>, so the sentinel is only ever picked when
+   no real candidate exists — confining the damage to per-turn
+   behaviour in the first room instead of a blank message box.
+   The :has(> hr) guard covers the first situation before any
+   action is clicked: its initial transition (startGame →
+   doTransitionTo) does not go through processLink, so
+   startOutputTransaction never runs and no <hr> is cloned in.
+   While there is no <hr> at all, this rule stays off and the
+   whole first beat shows. */
+#content:has(> hr) > *:not(hr:nth-last-child(1 of hr:not(:has(a:not(.sticky,.raw))~hr), hr:first-of-type)~*) {
+    display: none;
+}
+#content > hr {
+    display: none; /* separators are anchors, not decoration */
+}
+/* The choice list is the only ul.options in the document (the engine
+   removes old ones), and flex order pins it under the newest prose
+   even when it precedes the newest <hr> in the DOM. */
+#content > ul.options {
+    display: block;
+    order: 99;
+    list-style: none;
+    margin: 0.8em 0 0 0;
+    padding: 0;
+}
+#content > ul.options li {
+    border: 1px solid rgba(232, 183, 205, 0.6);
+    border-radius: 999px;
+    padding: 0.3em 1em;
+    margin-bottom: 0.4em;
+    cursor: pointer;
+    text-align: center;
+}
+#content > ul.options li:hover {
+    background: rgba(232, 183, 205, 0.2);
+}
+#content > ul.options li a {
+    text-decoration: none;
+}
+
+/* --- scene backdrop --- */
+#content > figure.scene {
+    display: none;
+    margin: 0;
+}
+#content > figure.scene:last-of-type {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background-color: #1a1218;
+    background-image: var(--vn-portrait, none), var(--vn-bg, none);
+    background-repeat: no-repeat, no-repeat;
+    background-position: right bottom, center;
+    background-size: auto 92%, cover;
+}
+#content > figure.scene figcaption {
+    display: none;
+}
+
+/* --- log mode --- */
+body:has(#vn-log-toggle:checked) #content_wrapper {
+    top: 3.2em;
+    bottom: 0;
+    max-height: none;
+}
+body:has(#vn-log-toggle:checked) #content > * {
+    display: block;
+}
+body:has(#vn-log-toggle:checked) #content > hr {
+    display: block;
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    margin: 1.2em 0;
+    height: 0;
+}
+body:has(#vn-log-toggle:checked) #content > figure.scene {
+    display: none;
+}
+body:has(#vn-log-toggle:checked) #content > figure.scene:last-of-type {
+    display: block;
+    position: fixed;
+    inset: 0;
+}
+
+/* Things a VN shell does not need. The engine showElement()s #legal
+   on reveal, so this needs !important to hold. */
+#legal {
+    display: none !important;
+}
+#toolbar, #menu, #content_library, #ui_library {
+    display: none;
+}
