@@ -123,8 +123,12 @@ worth knowing:
   setting `.click_message` to `display:none` inline. If that signal
   ever changes, the title stays at the top instead — the game still
   works, it just looks less like a VN.
-- Log mode opens at the top of the history; CSS alone cannot scroll
-  it to the bottom.
+- The log opens scrolled to the newest text: in log mode the
+  wrapper is a `column-reverse` flex container with `#content` as
+  its single child, which flips the scroll origin to the end of
+  the history (CSS has no initial-scroll-position property; this
+  is the one pattern that fakes it). Firefox and Safari have had
+  historical bugs with reverse-flex scrollers.
 - A very long beat scrolls inside the message box rather than
   paginating like a native VN.
 - Modern browsers only: `:has()` and `:nth-last-child(of)` (2023+).

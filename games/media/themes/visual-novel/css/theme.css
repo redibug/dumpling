@@ -39,8 +39,9 @@
      sets it display:none inline. If that hook ever changes, the title
      stays visible at the top instead of vanishing — the game still
      works, it just looks less like a VN.
-   - Log mode opens at the top of the history; CSS alone cannot scroll
-     it to the bottom.
+   - The log opens scrolled to the newest text, via a
+     column-reverse scroll container; Firefox and Safari have had
+     historical bugs with reverse-flex scrollers.
    - Actions clicked while still in the very first situation fall
      back to per-turn display — its candidate set is empty, and the
      hr:first-of-type sentinel in the rule keeps that graceful.
@@ -322,6 +323,19 @@ body:has(#vn-log-toggle:checked) #content_wrapper {
     flex: 1;
     min-height: 0;
     max-height: none;
+    /* Bottom-anchored scrolling: as a column-reverse container
+       with #content as its single child, the wrapper's scroll
+       origin is the end of the history, so the log opens on the
+       newest text and scrolls up into the past. The reversal
+       applies to the one child as a unit — the text order inside
+       it is untouched. (CSS has no initial-scroll-position
+       property; this is the one pattern that fakes it.) The
+       !important is load-bearing: showElement put an inline
+       display:block on the wrapper at reveal, and a plain
+       stylesheet display would lose to it and silently disable
+       the reverse container. */
+    display: flex !important;
+    flex-direction: column-reverse;
 }
 body:has(#vn-log-toggle:checked) #content > * {
     display: block;
