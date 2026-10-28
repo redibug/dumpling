@@ -2574,6 +2574,11 @@
         return 'media/themes/';
     })();
 
+    /* Resolves once the current theme's stylesheets have loaded (or
+     * failed to). The undo reveal consults computed styles and
+     * measures layout, so it must not outrun the sheets. */
+    let themeStylesReady = Promise.resolve();
+
     const applyThemeStylesheets = function(name) {
         const head = document.head ||
             document.getElementsByTagName('head')[0];
@@ -2590,8 +2595,18 @@
         mobile.media = 'only screen and (max-width: 640px)';
         mobile.href = themeStylesheetBase + name + '/css/theme-mobile.css';
         mobile.setAttribute('data-dumpling-theme', name);
+        const pending = [];
+        const watch = function(link) {
+            pending.push(new Promise(function(resolve) {
+                link.addEventListener('load', resolve);
+                link.addEventListener('error', resolve);
+            }));
+        };
+        watch(main);
+        watch(mobile);
         head.appendChild(main);
         head.appendChild(mobile);
+        themeStylesReady = Promise.all(pending);
     };
 
     let currentThemeName = 'dumpling';
@@ -2701,8 +2716,24 @@
         }, {once: true});
 
         // An undo load skips the title screen entirely and snaps
-        // straight to the replayed state.
-        if (undoLoad) revealGame(true);
+        // straight to the replayed state. The reveal must wait for
+        // the theme stylesheets, though: showElement trusts
+        // getComputedStyle, which is meaningless before they land,
+        // so on a slow (uncached) load the reveal "succeeds" against
+        // unstyled layout — and when the sheets arrive a moment
+        // later their display:none rules hide the game again, for
+        // good. (On the visual-novel theme the same sequence also
+        // drops the title splash, leaving an empty screen with
+        // nothing to click.) A timeout keeps a hung sheet from
+        // trapping the game: reveal anyway, as before.
+        if (undoLoad) {
+            const giveUp = new Promise(function(resolve) {
+                setTimeout(resolve, 3000);
+            });
+            Promise.race([themeStylesReady, giveUp]).then(function() {
+                revealGame(true);
+            });
+        }
 
         // Any point that an option list appears, its options are its
         // first links.
