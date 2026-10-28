@@ -91,9 +91,12 @@
 
     <!-- ══ situation: start ═══════════════════════════════════════
          data-enter runs BEFORE the content (js-identical), so the
-         visit counter it bumps is already visible in the text below. -->
+         visit counter it bumps is already visible in the text below.
+         It goes through system.setQuality: assigning
+         character.qualities directly would change the value (and
+         the save) but never update the character panel. -->
     <div id="start" class="situation"
-         data-enter="character.qualities.visits = character.qualities.visits + 1;"
+         data-enter="system.setQuality('visits', character.qualities.visits + 1);"
          data-actions="commonActions"
          data-action-wave="waveBack(character, system)"
          data-action-poke="system.write('<p>You poke the barista. (attribute version — should lose to the div below)</p>')">
