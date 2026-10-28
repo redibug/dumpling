@@ -1,0 +1,23 @@
+<!-- chapter2.html — fetched at boot via <link rel="dumpling-content">.
+     Inline scripts here RUN (createContextualFragment, not innerHTML),
+     so helpers defined in a content file are usable by its situations. -->
+<script>
+  // Proves scripts inside fetched content files execute at boot.
+  function cellarNote(character) {
+    return character.sandbox.sawFireflies
+      ? "You carry a little of the garden's glow down with you."
+      : "It's darker than the garden was. You haven't been out there yet.";
+  }
+</script>
+
+<div id="cellar" class="situation"
+     data-enter="character.sandbox.cellarTrips = (character.sandbox.cellarTrips || 0) + 1;">
+  <h1>The Cellar</h1>
+  <p>{{cellarNote(character)}} (trip
+  <b>{{character.sandbox.cellarTrips}}</b> — counted by data-enter in
+  <i>this</i> file.)</p>
+  <p>Escaped interpolation: {{character.sandbox.name}} — the &amp; stays
+  an &amp;amp;. Raw triple-brace version: {{{character.sandbox.name}}}.</p>
+  <p class="transient"><a href="start">Back upstairs</a>, or
+  <a href="garden">out to the garden</a>.</p>
+</div>

@@ -1,0 +1,154 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>The Midnight Café — html-authoring demo</title>
+    <meta name="viewport" content="user-scalable=no, width=device-width">
+    <!-- ★ the new html-first feature: content files are fetched at boot
+         behind the title screen, then behave exactly like in-page HTML. -->
+    <link rel="dumpling-content" href="media/games/midnight-cafe/content/chapter2.html">
+  </head>
+  <body>
+    <div id="toolbar">
+      <h1>Midnight Café</h1>
+      <div class="nav">
+        <a href="#" class="button" id="menu-button">Menu</a>
+      </div>
+    </div>
+    <ul id="menu">
+      <li><a href="#title, #content_wrapper">Story</a></li>
+      <li><a href="#character_panel">Character</a></li>
+      <li><a href="#info_panel">Info</a></li>
+    </ul>
+
+    <div id="page">
+      <div id="tools_wrapper">
+        <div id="info_panel" class="tools left">
+          <h1>Midnight Café</h1>
+          <p>A tiny demo for the <b>html-authoring</b> branch: link-tag
+          content files, data-enter/exit/act, layered actions, and
+          {{ }} interpolation — all authored in HTML.</p>
+          <div class='buttons'>
+            <button id="back">Back</button><button id="erase">Erase</button>
+          </div>
+        </div>
+
+        <div id="character_panel" class="tools right">
+          <h1>Character</h1>
+          <div id="character">
+            <div id="character_text">
+              <div id="character_text_content"></div>
+            </div>
+            <div id="qualities"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="mid_panel">
+        <div id="title">
+          <div class="label">
+            <h1>The Midnight Café<br><span class="fancy">an html-authoring demo</span></h1>
+            <h2>for the dumpling engine</h2>
+            <noscript><p class="noscript_message">This game requires Javascript.</p></noscript>
+            <p class="click_message">click to begin</p>
+          </div>
+        </div>
+
+        <div id="content_wrapper">
+          <div id="content">
+          </div>
+          <a name="end_of_content"></a>
+        </div>
+
+        <div id="legal">
+          <p>Demo for <a href="https://github.com/redibug/dumpling">Dumpling</a>'s html-authoring branch.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="ui_library">
+      <div id="quality" class="quality">
+        <span class="name" data-attr="name"></span>
+        <span class="value" data-attr="value"></span>
+      </div>
+      <div id="quality_group" class="quality_group">
+        <h2 data-attr="title"></h2>
+        <div class="qualities_in_group"></div>
+      </div>
+      <div id="progress_bar" class="progress_bar">
+        <span class="name" data-attr="name"></span>
+        <span class="value" data-attr="value"></span>
+        <div class="progress_bar_track">
+          <div class="progress_bar_color" data-attr="width"></div>
+        </div>
+        <span class="left_label" data-attr="left_label"></span>
+        <span class="right_label" data-attr="right_label"></span>
+      </div>
+      <hr id="turn_separator">
+    </div>
+
+    <div id="content_library"></div>
+
+    <!-- ══ situation: start ═══════════════════════════════════════
+         data-enter runs BEFORE the content (js-identical), so the
+         visit counter it bumps is already visible in the text below. -->
+    <div id="start" class="situation"
+         data-enter="character.qualities.visits = character.qualities.visits + 1;"
+         data-actions="commonActions"
+         data-action-wave="waveBack(character, system)"
+         data-action-poke="system.write('<p>You poke the barista. (attribute version — should lose to the div below)</p>')">
+      <h1>The Midnight Café</h1>
+      <p>Welcome back, {{character.sandbox.name}}. The bell over the
+      door knows you by now — this is visit
+      <b>{{character.qualities.visits}}</b>.</p>
+      <p class="transient">You could <a href="./order">order</a>,
+      <a href="./wave">wave</a>, <a href="./look">look around</a>,
+      <a href="./poke">poke the barista</a>, step out to the
+      <a href="garden">garden</a>, or head down to the
+      <a href="cellar">cellar</a> (that one lives in the
+      <i>fetched</i> content file).</p>
+
+      <!-- plain-text action: no code at all, supports {{ }} too -->
+      <div class="action" data-action="order">
+        <p>The barista slides a glowing parfait across the counter.
+        "On the house, {{character.sandbox.name}}."</p>
+      </div>
+
+      <!-- collision demo: this div and the data-action-poke attribute
+           above both claim "poke". the div wins (highest visibility),
+           and the console gets a warning about it. -->
+      <div class="action" data-action="poke">
+        <p>You poke the barista. She pokes you back, twice as hard.
+        (div.action wins — check the console for the warning.)</p>
+      </div>
+    </div>
+
+    <!-- ══ situation: garden ══════════════════════════════════════
+         data-exit sets a flag; data-act is the fallback for any
+         action link with no declared action. -->
+    <div id="garden" class="situation"
+         data-exit="character.sandbox.sawFireflies = true;"
+         data-act="system.write('<p>Nothing happens. The night just keeps being night.</p>')">
+      <h1>The Garden</h1>
+      <p>Fireflies stitch the dark together. The café glows behind you.</p>
+      <p class="transient"><a href="./dance">Dance</a> with the fireflies
+      (no declared action — the data-act fallback answers), or
+      <a href="start">go back inside</a>.</p>
+    </div>
+
+    <!-- ══ inline helpers for this page ═══════════════════════════ -->
+    <script>
+      // Shared table: every situation naming it via data-actions gets
+      // these for free, and can override per-room without a warning.
+      var commonActions = {
+        look: "Rain streaks the windows. The café hums at 2 AM."
+      };
+      function waveBack(character, system) {
+        system.write("<p>You wave. The barista waves back with both hands.</p>");
+      }
+    </script>
+
+    <script type="text/javascript" src="media/js/dumpling.js"></script>
+    <script type="text/javascript" src="media/games/midnight-cafe/game.js"></script>
+  </body>
+</html>
