@@ -4,7 +4,12 @@
     <meta charset="utf-8">
     <title>Visual-Novel Theme Demo</title>
     <meta name="viewport" content="user-scalable=no, width=device-width">
-    <!-- Dumpling injects the theme stylesheets itself (see dumpling.theme). -->
+    <!-- The theme is declared here, with real <link> tags, so the
+         page is styled from the first paint. The engine adopts
+         these links; dumpling.theme in the game file still works
+         for switching themes at runtime. -->
+    <link rel="stylesheet" media="screen" href="media/themes/visual-novel/css/theme.css" data-dumpling-theme="visual-novel">
+    <link rel="stylesheet" media="only screen and (max-width: 640px)" href="media/themes/visual-novel/css/theme-mobile.css" data-dumpling-theme="visual-novel">
   </head>
   <body>
     <div id="toolbar"><h1>VN Demo</h1><div class="nav"><a href="#" class="button" id="menu-button">Menu</a></div></div>

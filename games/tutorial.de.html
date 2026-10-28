@@ -8,7 +8,12 @@
 
     <!-- Entferne das Folgende, falls du nicht die Schriftart Tangerine in deinem Stylesheet benutzt -->
 
-    <!-- Dies ist das Stylesheet des Spiels; es kann nach Belieben geaendert werden. -->
+    <!-- Das Theme wird hier mit echten <link>-Tags deklariert, damit
+         die Seite vom ersten Moment an gestylt ist. Die Engine
+         übernimmt diese Links; dumpling.theme in der Spieldatei
+         funktioniert weiterhin, um Themes zur Laufzeit zu wechseln. -->
+    <link rel="stylesheet" media="screen" href="media/themes/dumpling/css/theme.css" data-dumpling-theme="dumpling">
+    <link rel="stylesheet" media="only screen and (max-width: 640px)" href="media/themes/dumpling/css/theme-mobile.css" data-dumpling-theme="dumpling">
 
     <!-- Unterstuetzung fuer tragbare Geraete (Smartphones etc.). -->
     <meta name="viewport" content="user-scalable=no, width=device-width">
