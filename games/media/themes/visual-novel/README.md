@@ -7,6 +7,9 @@ A Dumpling theme that turns the engine into a visual novel, theme-only
 
 - Only the newest beat is visible, in a message box anchored to the
   bottom of the screen.
+- Choice lists (`ul.options`, from `writeChoices`) float as pill
+  buttons stacked at the centre of the screen, in front of
+  everything; in log mode the same list sits inline as history.
 - A **Log** button expands that box upward into the full history.
 - Backgrounds and character portraits per situation, as CSS
   backgrounds — so old scenes are never loaded (see below).
@@ -90,9 +93,9 @@ worth knowing:
 
 - Groups are per **situation**, not per click. An action response
   lands after a newer `<hr>` inside the same group, so it stays
-  visible alongside its situation instead of replacing it. The
-  choice list is pinned under the newest prose with flex `order`,
-  since action responses append after it in the DOM.
+  visible alongside its situation instead of replacing it. A
+  situation's choice list, wherever it sits in the group, leaves
+  the flow and floats as the centred choice overlay.
 - The **first** situation has no separator at all: the initial
   transition does not go through `processLink`, so
   `startOutputTransaction` never runs for it. The `:has(> hr)`
@@ -137,7 +140,7 @@ worth knowing:
 ## Demo
 
 `games/visual-novel-demo.html` (from the repo root's `games/`
-folder) is a three-beat toy using gradient stand-ins for scene art,
+folder) is a four-beat toy using gradient stand-ins for scene art,
 so it runs with no image files at all. Click the title, read, choose,
 hit Log, and watch old beats come back without any old scene art
 loading — that last part is the design working, not a bug.

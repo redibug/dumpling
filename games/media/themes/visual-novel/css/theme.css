@@ -12,9 +12,8 @@
    <hr> preceding a live link. Action responses therefore stay
    visible alongside their situation instead of replacing it. The
    <hr> separators themselves stay hidden — they are only anchors.
-   The choice list is pinned to the bottom of the message box with
-   flex order, below any action responses (they append after the
-   choice list in the DOM, not before it).
+   A choice list (ul.options, from writeChoices) leaves the flow
+   entirely and floats as pill buttons at the centre of the screen.
 
    Scenes: a situation opens with <figure class="scene"> and sets its
    layers through CSS variables, e.g.
@@ -250,28 +249,45 @@ body {
 #content > hr {
     display: none; /* separators are anchors, not decoration */
 }
-/* The choice list is the only ul.options in the document (the engine
-   removes old ones), and flex order pins it under the newest prose
-   even when it precedes the newest <hr> in the DOM. */
+/* --- choices: a centred overlay of pills ---
+   A ul.options (from writeChoices) leaves the message box flow
+   entirely and floats as a stack of pill buttons at the centre of
+   the screen, in front of everything: its z-index competes in the
+   root context (the message box wrapper forms no stacking
+   context), above the top bar and the title splash alike. Only
+   the pills themselves take clicks — no full-screen shield, so
+   the bar's buttons stay reachable while a choice is up. In log
+   mode the list drops back into the flow as a static list: it is
+   history there, not a prompt. */
 #content > ul.options {
-    display: block;
-    order: 99;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 40;
+    min-width: min(22em, 84vw);
     list-style: none;
-    margin: 0.8em 0 0 0;
+    margin: 0;
     padding: 0;
 }
 #content > ul.options li {
     border: 1px solid rgba(232, 183, 205, 0.6);
     border-radius: 999px;
+    background: rgba(24, 14, 22, 0.92);
+    box-shadow: 0 0.4em 1.2em rgba(0, 0, 0, 0.45);
     padding: 0.3em 1em;
-    margin-bottom: 0.4em;
+    margin-bottom: 0.5em;
     cursor: pointer;
     text-align: center;
 }
+#content > ul.options li:last-child {
+    margin-bottom: 0;
+}
 #content > ul.options li:hover {
-    background: rgba(232, 183, 205, 0.2);
+    background: rgba(90, 45, 70, 0.95);
 }
 #content > ul.options li a {
+    display: block;
     text-decoration: none;
 }
 
@@ -354,6 +370,12 @@ body:has(#vn-log-toggle:checked) #content > figure.scene:last-of-type {
     display: block;
     position: fixed;
     inset: 0;
+}
+body:has(#vn-log-toggle:checked) #content > ul.options {
+    position: static;
+    transform: none;
+    min-width: 0;
+    margin: 0.8em 0 0 0;
 }
 
 /* Things a VN shell does not need. The engine showElement()s #legal

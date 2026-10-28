@@ -17,6 +17,7 @@ dumpling.game.situations = {
         <p class="transient">You could <a href="garden">slip out to the garden</a>,
         or <a href="./apologise">apologise</a>.</p>`,
         {
+            optionText: "Head back inside",
             actions: {
                 'apologise': `<p>“Sorry,” you say. She turns a page.
                 “You’re still late. Sit down.”</p>
@@ -31,14 +32,26 @@ dumpling.game.situations = {
         already waiting on the bench.</p>
         <p>“Took you long enough,” says the second girl, smiling.</p>
         <p class="transient"><a href="library">Go back inside</a>, or
-        <a href="ending">stay a while</a>.</p>`
+        <a href="bench">stay a while</a>.</p>`
+    ),
+    bench: new dumpling.SimpleSituation(
+        `<figure class="scene" style="--vn-bg:linear-gradient(160deg, #1e3a2a, #0c1a12); --vn-portrait:linear-gradient(180deg, #ffe08a, #b8742a)"></figure>
+        <p>The bench is still warm from the day, and the fireflies are
+        putting on their whole show for an audience of two.</p>
+        <p>“Well?” she says. “The night is not getting any younger.”</p>`,
+        {
+            choices: ["ending", "library"]
+        }
     ),
     ending: new dumpling.SimpleSituation(
         `<figure class="scene" style="--vn-bg:linear-gradient(160deg, #3e1a2e, #160a14); --vn-portrait:linear-gradient(180deg, #c9a8ff, #5a2a8a)"></figure>
         <p>You stay. The fireflies keep their own time, and for once
         nobody is in a hurry.</p>
         <p class="transient">The demo ends here —
-        <a href="library">start over</a>.</p>`
+        <a href="library">start over</a>.</p>`,
+        {
+            optionText: "Stay until the stars come out"
+        }
     )
 };
 
