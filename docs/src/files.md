@@ -77,4 +77,31 @@ you can use `undum.isInteractive()` to test whether the game is being
 played normally (returns `true`) or being loaded from a save game
 (returns `false`).
 
+## The Save URL
+
+*Dumpling only.* A save is the page's own URL: there is no save
+button, and nothing is stored anywhere else. After the `#`, the
+hash holds three colon-separated parts:
+
+    #<version>:<seed>:<tokens>
+
+The version is your game's version string. If it doesn't match the
+game being loaded, the player is warned that the save may be stale
+and chooses whether to try it anyway. The seed is a short random
+string that makes the game's random number generator replay
+identically. The tokens are the player's actions, comma-separated.
+Each token is either the index of the link that was clicked
+(counting the live links on the page at that time) or a text input
+value, percent-encoded. Which kind a token is follows from the
+game state at that step, so tokens need no marker of their own.
+
+A run of the same token repeated — the same link index over and
+over, as when a player clicks through a long passage — is written
+once as `token*count` and expanded back when the save is loaded.
+The largest run written or expanded this way is set by
+`dumpling.maxRunLength` (1000 by default). A typed answer can
+never be mistaken for a run: asterisks in input values are
+percent-encoded along with everything else unsafe, so a bare `*`
+in a save only ever means a run.
+
 
