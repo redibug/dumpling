@@ -149,10 +149,16 @@ p + p, p + img + p, p + hr + p {
     padding-top: 0.1em;
     display: block;
     float: left;
+}
+#content .drop-cap-letter {
     font-weight: normal;
     font-size: 3.2em;
     line-height: 0.8em;
     font-family: 'SquareCaps', serif;
+}
+#content .drop-cap-punctuation {
+    position: absolute;
+    right: 100%;
 }
 ul {
     margin: 0;

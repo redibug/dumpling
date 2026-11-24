@@ -2002,9 +2002,16 @@
      * engine therefore marks the character itself: the first letter
      * or number in the paragraph (Unicode properties, so accented
      * and non-Latin characters count) is wrapped in a span.drop-cap
-     * for the themes to style, and leading punctuation is left
-     * alone. Combining marks stay with their base character, so an
-     * accented letter is never split in half.
+     * for the themes to style. Combining marks stay with their base
+     * character, so an accented letter is never split in half.
+     *
+     * The punctuation the search skipped over is not left in the
+     * text flow either: because the drop cap floats, it would end
+     * up stranded between the cap and the rest of its word. It is
+     * moved into a span.drop-cap-punctuation inside the drop cap,
+     * which the themes position to the cap's left, hanging in the
+     * margin at ordinary text size — the way print sets an opening
+     * quotation mark. The letter itself sits in span.drop-cap-letter.
      *
      * Which paragraphs qualify is the themes' long-standing rule:
      * a paragraph directly after an h1, or directly after an image
@@ -2014,6 +2021,11 @@
     const wrapDropCap = function(paragraph) {
         const walker = document.createTreeWalker(
             paragraph, NodeFilter.SHOW_TEXT);
+        // Characters skipped on the way to the letter, and the text
+        // nodes they came from (their characters are removed once
+        // the letter is found and the prefix changes home).
+        let prefix = '';
+        const drained = [];
         let node;
         while ((node = walker.nextNode())) {
             const text = node.nodeValue;
@@ -2031,12 +2043,26 @@
                     letter.splitText(end - index);
                     const span = document.createElement('span');
                     span.className = 'drop-cap';
-                    span.textContent = letter.nodeValue;
+                    const skipped = prefix.trim();
+                    if (skipped) {
+                        const punct = document.createElement('span');
+                        punct.className = 'drop-cap-punctuation';
+                        punct.textContent = skipped;
+                        span.appendChild(punct);
+                    }
+                    const letterSpan = document.createElement('span');
+                    letterSpan.className = 'drop-cap-letter';
+                    letterSpan.textContent = letter.nodeValue;
+                    span.appendChild(letterSpan);
                     letter.replaceWith(span);
+                    for (const old of drained) old.nodeValue = '';
+                    node.nodeValue = '';
                     return;
                 }
+                prefix += ch;
                 index += ch.length;
             }
+            drained.push(node);
         }
     };
     const applyDropCaps = function(nodes) {
