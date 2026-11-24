@@ -127,16 +127,21 @@ p + p, p + img + p, p + hr + p {
     font-weight: bold;
     color: rgba(0,0,0,0.85);
 }
-#content h1 + p:first-letter,
-#content h1 + img + p:first-letter {
+#content .drop-cap {
     position: relative;
     padding-top: 0.1em;
     display: block;
     float: left;
+}
+#content .drop-cap-letter {
     font-weight: normal;
     font-size: 3.2em;
     line-height: 0.8em;
     color: #210;
+}
+#content .drop-cap-punctuation {
+    position: absolute;
+    right: 100%;
 }
 ul {
     margin: 0;

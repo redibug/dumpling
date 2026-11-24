@@ -1867,7 +1867,7 @@
 
     /* Collects reveal units in document order. Headings and list items
      * become single units; everything else splits into characters. */
-    const teletypeCollect = function(node, units, ctx) {
+    const teletypeCollect = function(node, units) {
         // Idempotent: never double-wrap already-prepared units.
         if (node.nodeType === Node.ELEMENT_NODE &&
             node.classList.contains('tt-unit')) {
@@ -1883,10 +1883,6 @@
                 const span = document.createElement('span');
                 span.textContent = ch;
                 teletypeHide(span);
-                if (ctx && ctx.dropCap && ch.trim()) {
-                    span.classList.add('tt-dropcap');
-                    ctx.dropCap = false;
-                }
                 frag.appendChild(span);
                 units.push(span);
             }
@@ -1905,30 +1901,8 @@
                     teletypeHide(node);
                     units.push(node);
                 }
-                // Drop cap: first paragraph after a heading gets its
-                // first character marked. Skips turn separators.
-                let dropCap = false;
-                if (tag === 'P') {
-                    let prev = node.previousElementSibling;
-                    // Skip HR separators.
-                    while (prev && prev.tagName === 'HR') {
-                        prev = prev.previousElementSibling;
-                    }
-                    if (prev && /^H[1-6]$/.test(prev.tagName)) {
-                        dropCap = true;
-                    } else if (prev && prev.tagName === 'IMG') {
-                        let prev2 = prev.previousElementSibling;
-                        while (prev2 && prev2.tagName === 'HR') {
-                            prev2 = prev2.previousElementSibling;
-                        }
-                        if (prev2 && /^H[1-6]$/.test(prev2.tagName)) {
-                            dropCap = true;
-                        }
-                    }
-                }
-                const childCtx = dropCap ? {dropCap: true} : null;
                 for (const child of Array.from(node.childNodes)) {
-                    teletypeCollect(child, units, childCtx);
+                    teletypeCollect(child, units);
                 }
             }
         }
@@ -1939,7 +1913,7 @@
     const teletypePrepare = function(nodes) {
         const units = [];
         for (const node of nodes) {
-            teletypeCollect(node, units, null);
+            teletypeCollect(node, units);
         }
         // Ensure a click can always rescue hidden units, even if the
         // reveal timer never starts.
@@ -2020,6 +1994,96 @@
         teletypeBegin(teletypePrepare(nodes));
     };
 
+    /* Drop caps. The themes style the first character of a
+     * paragraph that follows a heading — but with CSS :first-letter
+     * the browser includes any opening punctuation in the styled
+     * unit, so a paragraph that opens with dialogue gets its
+     * quotation mark drop-capped instead of its first letter. The
+     * engine therefore marks the character itself: the first letter
+     * or number in the paragraph (Unicode properties, so accented
+     * and non-Latin characters count) is wrapped in a span.drop-cap
+     * for the themes to style. Combining marks stay with their base
+     * character, so an accented letter is never split in half.
+     *
+     * The punctuation the search skipped over is not left in the
+     * text flow either: because the drop cap floats, it would end
+     * up stranded between the cap and the rest of its word. It is
+     * moved into a span.drop-cap-punctuation inside the drop cap,
+     * which the themes position to the cap's left, hanging in the
+     * margin at ordinary text size — the way print sets an opening
+     * quotation mark. The letter itself sits in span.drop-cap-letter.
+     *
+     * Which paragraphs qualify is the themes' long-standing rule:
+     * a paragraph directly after an h1, or directly after an image
+     * that directly follows an h1. */
+    const dropCapLetter = /[\p{L}\p{N}]/u;
+    const dropCapMark = /\p{M}/u;
+    const wrapDropCap = function(paragraph) {
+        const walker = document.createTreeWalker(
+            paragraph, NodeFilter.SHOW_TEXT);
+        // Characters skipped on the way to the letter, and the text
+        // nodes they came from (their characters are removed once
+        // the letter is found and the prefix changes home).
+        let prefix = '';
+        const drained = [];
+        let node;
+        while ((node = walker.nextNode())) {
+            const text = node.nodeValue;
+            let index = 0;
+            for (const ch of text) {
+                if (dropCapLetter.test(ch)) {
+                    let end = index + ch.length;
+                    while (end < text.length) {
+                        const mark = String.fromCodePoint(
+                            text.codePointAt(end));
+                        if (!dropCapMark.test(mark)) break;
+                        end += mark.length;
+                    }
+                    const letter = node.splitText(index);
+                    letter.splitText(end - index);
+                    const span = document.createElement('span');
+                    span.className = 'drop-cap';
+                    const skipped = prefix.trim();
+                    if (skipped) {
+                        const punct = document.createElement('span');
+                        punct.className = 'drop-cap-punctuation';
+                        punct.textContent = skipped;
+                        span.appendChild(punct);
+                    }
+                    const letterSpan = document.createElement('span');
+                    letterSpan.className = 'drop-cap-letter';
+                    letterSpan.textContent = letter.nodeValue;
+                    span.appendChild(letterSpan);
+                    letter.replaceWith(span);
+                    for (const old of drained) old.nodeValue = '';
+                    node.nodeValue = '';
+                    return;
+                }
+                prefix += ch;
+                index += ch.length;
+            }
+            drained.push(node);
+        }
+    };
+    const applyDropCaps = function(nodes) {
+        const content = $id('content');
+        for (const node of nodes) {
+            if (node.nodeType !== Node.ELEMENT_NODE) continue;
+            const paragraphs = [];
+            if (node.tagName === 'P') paragraphs.push(node);
+            node.querySelectorAll('p').forEach((p) => paragraphs.push(p));
+            for (const paragraph of paragraphs) {
+                if (!content.contains(paragraph)) continue;
+                const prev = paragraph.previousElementSibling;
+                const qualifies = prev && (prev.tagName === 'H1' ||
+                    (prev.tagName === 'IMG' &&
+                     prev.previousElementSibling &&
+                     prev.previousElementSibling.tagName === 'H1'));
+                if (qualifies) wrapDropCap(paragraph);
+            }
+        }
+    };
+
     /* Outputs regular content to the page. Used by write and
      * writeBefore, the last two arguments control which DOM insertion
      * method is used to add the content.
@@ -2035,6 +2099,7 @@
         else {
             insertNodes(element, appendMethod, output);
         }
+        applyDropCaps(output);
         if (interactive && window.dumpling.teletype && teletypeArmed &&
             isVisible($id('content_wrapper'))) {
             // Hide immediately (reserving layout); the reveal itself
@@ -3407,7 +3472,7 @@
         no_group_definition: "Couldn't find a group definition for {id}.",
         link_not_valid: "The link '{link}' doesn't appear to be valid.",
         link_no_action: "A link with a situation of '.', must have an action.",
-        unknown_situation: "You can't move to an unknown situation: {id}.",
+        unknown_situation: "You can't move to an unknown situation: {id}. Check it is defined, and if it lives in an external file, that the file is included with a <link rel=\"dumpling-content\">.",
         existing_situation: "You can't override situation {id} in HTML.",
         erase_message: "This will permanently delete this character and immediately return you to the start of the game. Are you sure?",
         save_version_warning: "This save is from game version {save}, but the game is now version {game}. It may not load correctly. Try to load it anyway?",
