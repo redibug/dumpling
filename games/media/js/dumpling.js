@@ -939,7 +939,10 @@
             qsa("a[href='" + code + "']").forEach(function(a) {
                 const span = document.createElement("span");
                 span.className = "ex_link";
-                span.innerHTML = a.innerHTML;
+                // Move the children, don't copy them (see
+                // lockLinks): teletype's queue holds references
+                // to the original elements.
+                while (a.firstChild) span.appendChild(a.firstChild);
                 a.replaceWith(span);
             });
         }
@@ -1877,8 +1880,11 @@
                             'ms ease;' + TT_SHOWN;
     };
 
-    /* Collects reveal units in document order. Headings and list items
-     * become single units; everything else splits into characters. */
+    /* Collects reveal units in document order. Headings, list items,
+     * images and forms become single units; everything else splits
+     * into characters. (A form reveals whole, at its turn: splitting
+     * it would leave its input visible from the start, with the
+     * prompt and button text ticking in around it.) */
     const teletypeCollect = function(node, units) {
         // Idempotent: never double-wrap already-prepared units.
         if (node.nodeType === Node.ELEMENT_NODE &&
@@ -1902,7 +1908,8 @@
         } else if (node.nodeType === Node.ELEMENT_NODE) {
             const tag = node.tagName;
             if (tag === 'SCRIPT' || tag === 'STYLE') return;
-            if (/^H[1-6]$/.test(tag) || tag === 'LI' || tag === 'IMG') {
+            if (/^H[1-6]$/.test(tag) || tag === 'LI' || tag === 'IMG' ||
+                tag === 'FORM') {
                 teletypeHide(node);
                 units.push(node);
             } else {
@@ -2530,7 +2537,10 @@
                     return;
                 const span = document.createElement("span");
                 span.className = "ex_link";
-                span.innerHTML = a.innerHTML;
+                // Move the children, don't copy them (see
+                // lockLinks): teletype's queue holds references
+                // to the original elements.
+                while (a.firstChild) span.appendChild(a.firstChild);
                 a.replaceWith(span);
             });
         }
@@ -2597,7 +2607,12 @@
             }
             span.classList.add('locked_link');
             span.setAttribute('data-href', a.getAttribute('href'));
-            span.innerHTML = a.innerHTML;
+            // Move the link's children, don't copy them: teletype
+            // reveals through references to the very elements it
+            // prepared (character spans), and a copy orphans them —
+            // the copies stay hidden until the reveal's finish
+            // sweep, long after their turn came and went.
+            while (a.firstChild) span.appendChild(a.firstChild);
             a.replaceWith(span);
         });
     };
@@ -2611,7 +2626,7 @@
             }
             a.setAttribute('href', span.getAttribute('data-href'));
             a.classList.remove('locked_link');
-            a.innerHTML = span.innerHTML;
+            while (span.firstChild) a.appendChild(span.firstChild);
             span.replaceWith(a);
             wireLink(a);
         });
