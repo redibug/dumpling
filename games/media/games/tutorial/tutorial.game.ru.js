@@ -343,8 +343,7 @@ dumpling.game.situations = {
                 она снова заработает.</p>
                 <p>Скажи мне слово, и я повторю его.</p>`);
             system.askForInput("Твоё слово:", function(value) {
-                const safe = value.replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                const safe = system.escapeHTML(value);
                 system.write(
                     `<p>Ты сказал: <strong>${safe}</strong></p>
                     <p>Давай <a href='hub'>вернёмся к списку тем</a>.</p>`);

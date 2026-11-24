@@ -919,6 +919,18 @@
             doAskForInput(prompt, callback, buttonText);
         }
 
+        /* Escapes a value so it can be safely included in HTML
+         * passed to system.write: &, <, >, " and ' become entities.
+         * This is the engine's own escaper, the one {{ }}
+         * interpolation applies in HTML-authored content. Use it
+         * when echoing text you don't control — an askForInput
+         * answer, say — into a write. The value itself is never
+         * modified; escaping happens here, at the point of writing,
+         * so the same value stays usable for comparisons and logic. */
+        escapeHTML(value) {
+            return escapeHTML(String(value));
+        }
+
         /* Turns any links that target the given href into plain
          * text. This can be used to remove action options when an action
          * is no longer available. It is used automatically when you give

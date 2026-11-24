@@ -365,8 +365,7 @@ dumpling.game.situations = {
                 works again.</p>
                 <p>Tell me a word, and I'll say it back.</p>`);
             system.askForInput("Your word:", function(value) {
-                const safe = value.replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                const safe = system.escapeHTML(value);
                 system.write(
                     `<p>You said: <strong>${safe}</strong></p>
                     <p>Let's <a href='hub'>return to the topic
