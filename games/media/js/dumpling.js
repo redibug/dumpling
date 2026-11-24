@@ -1481,7 +1481,9 @@
      * bookmark. Each token is either a link index (the number of
      * the link clicked, counting the live links on the page) or a
      * text input value (encodeURIComponent'd). The game state at
-     * each step says which kind to expect, so no marker is needed. */
+     * each step says which kind to expect, so no marker is needed.
+     * A run of the same token repeated is written once as
+     * token*count (see encodeTokens). */
     let progress = {
         // A short random seed string, used internally to make
         // random sequences predictable.
@@ -1495,12 +1497,57 @@
         return Math.floor(Math.random() * 0x7fffffff).toString(36);
     };
 
+    /* The largest run of identical tokens that the save format
+     * expresses in the run-length form token*count. Authors can
+     * change it with dumpling.maxRunLength; anything that is not a
+     * positive number falls back to the default. The encoder below
+     * never emits a longer run (it chunks), and the parser never
+     * expands one, so a hand-written hash can't make the loader
+     * build an absurd token list. */
+    const runCap = function() {
+        const v = window.dumpling.maxRunLength;
+        return (typeof v === 'number' && v >= 1) ? Math.floor(v) : 1000;
+    };
+
+    /* Serializes the token sequence for the URL hash. A run of the
+     * same token repeated — clicking through a long passage records
+     * the same link index over and over — is written once as
+     * token*count whenever that is shorter than writing the run
+     * out. Input values can never contain a bare '*' (see
+     * askForInput), so in the serialized form a '*' always marks
+     * a run. */
+    const encodeTokens = function(tokens) {
+        const parts = [];
+        let i = 0;
+        while (i < tokens.length) {
+            const token = tokens[i];
+            let count = 1;
+            while (i + count < tokens.length &&
+                   tokens[i + count] === token) count++;
+            i += count;
+            while (count > 0) {
+                const chunk = Math.min(count, runCap());
+                count -= chunk;
+                const runForm = token + '*' + chunk;
+                // The chunk written out in full, separators included,
+                // to compare like with like against the run form.
+                const plainLength = (token.length + 1) * chunk;
+                if (chunk > 1 && runForm.length + 1 < plainLength) {
+                    parts.push(runForm);
+                } else {
+                    for (let j = 0; j < chunk; j++) parts.push(token);
+                }
+            }
+        }
+        return parts.join(',');
+    };
+
     /* Builds the URL hash for the current progress. With undo set,
      * appends the &u flag that marks the next load as an undo (the
      * flag is stripped again on load). */
     const buildHash = function(undo) {
         let hash = '#' + game.version + ':' + progress.seed + ':' +
-            progress.sequence.join(',');
+            encodeTokens(progress.sequence);
         if (undo) hash += '&u';
         return hash;
     };
@@ -1517,7 +1564,21 @@
         }
         const parts = body.split(':');
         if (parts.length !== 3) return null;
-        const tokens = parts[2] === '' ? [] : parts[2].split(',');
+        const rawTokens = parts[2] === '' ? [] : parts[2].split(',');
+        // Expand run-length encoded segments (token*count, see
+        // encodeTokens). A segment whose count is zero or over the
+        // run cap is not a run: it stays a literal token, and the
+        // replay's usual error handling deals with it.
+        const tokens = [];
+        for (const segment of rawTokens) {
+            const m = segment.match(/^(.+)\*(\d+)$/);
+            const count = m ? parseInt(m[2], 10) : 0;
+            if (m && count >= 1 && count <= runCap()) {
+                for (let j = 0; j < count; j++) tokens.push(m[1]);
+            } else {
+                tokens.push(segment);
+            }
+        }
         return {version: parts[0], seed: parts[1], tokens: tokens,
                 undo: undo};
     };
@@ -2153,7 +2214,12 @@
             answered.className = 'input_answer';
             answered.textContent = prompt + ' ' + value;
             form.replaceWith(answered);
-            recordToken(encodeURIComponent(value));
+            // Record the answer. encodeURIComponent leaves '*'
+            // alone, so escape it explicitly: a bare '*' in a save
+            // is the run-length marker (see encodeTokens), and an
+            // answer containing one must not be read back as a run.
+            // decodeURIComponent restores it on replay.
+            recordToken(encodeURIComponent(value).replace(/\*/g, '%2A'));
             startOutputTransaction();
             callback(value);
             endOutputTransaction();
@@ -2553,7 +2619,11 @@
          * everything instantly (no animation). */
         teletypeTiming: 13,
         /* Milliseconds for the opacity fade-in of each revealed unit. */
-        teletypeFading: 350
+        teletypeFading: 350,
+        /* The largest run of identical tokens that a save writes in
+         * the run-length form token*count (see encodeTokens in the
+         * save code). Long click-to-continue passages are one run. */
+        maxRunLength: 1000
     };
     // Alias for backwards compatibility with Undum games and docs.
     window.undum = window.dumpling;
