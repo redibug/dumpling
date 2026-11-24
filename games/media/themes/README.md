@@ -23,20 +23,12 @@ Game authors declare a theme in the shell HTML, with real
 Declaring the theme in the HTML keeps the page styled from the
 very first paint: a head stylesheet is render-blocking, while a
 stylesheet added by script can only arrive after the script
-does — which flashes the unstyled page on slow loads. The
-engine adopts declared links and takes its initial theme from
-them.
+does — which flashes the unstyled page on slow loads.
 
-A game can still set the theme in its game file, which is how a
-game switches themes at runtime:
-
-```js
-dumpling.theme = "dumpling";
-```
-
-With no declaration in the HTML, the engine injects the
-stylesheets itself (the default theme is `dumpling`). Setting
-`dumpling.theme` to the already-active theme is a no-op.
+The declaration is the whole mechanism. The engine never
+injects, swaps, or removes theme stylesheets, and there is no
+JavaScript theme setting: to give a game a different theme,
+change the links in its shell.
 
 Built-in themes:
 
