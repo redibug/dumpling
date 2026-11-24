@@ -5,9 +5,9 @@
 // dumpling.game.qualities, und dumpling.game.init.
 // ---------------------------------------------------------------------------
 
-/* Pick a Dumpling theme. Built-in themes live in media/themes/:
- * "dumpling" (the default) and "undum" (the classic look). */
-dumpling.theme = "dumpling";
+/* The theme is declared in the HTML shell, not here — see the
+ * <link data-dumpling-theme> tags there, and media/themes/README.md.
+ * Built-in themes: "dumpling" (the default) and "undum". */
 
 /* Eine eindeutige Kennung fuer das Spiel (wird nicht im Spiel angezeigt)
  * Man kann eine UUID benutzen oder etwas anderes, was garantiert einzigartig

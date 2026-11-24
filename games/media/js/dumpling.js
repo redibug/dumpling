@@ -2815,22 +2815,14 @@
     // Theme system
     // -----------------------------------------------------------------------
 
-    /* Game authors pick a theme with `dumpling.theme = "name"`. Themes live
-       in media/themes/<name>/, with stylesheets in css/, images in img/,
-       and optional bundled fonts in fonts/. */
-    const themeStylesheetBase = (function() {
-        try {
-            const src = document.currentScript && document.currentScript.src;
-            const i = src ? src.lastIndexOf('/js/dumpling.js') : -1;
-            if (i > 0) return src.slice(0, i) + '/themes/';
-        } catch (e) {}
-        return 'media/themes/';
-    })();
-
-    /* Resolves once the current theme's stylesheets have loaded (or
-     * failed to). The undo reveal consults computed styles and
-     * measures layout, so it must not outrun the sheets. */
-    let themeStylesReady = Promise.resolve();
+    /* Themes are declared by the shell, with real <link> tags in
+       the head: <link rel="stylesheet" href=".../theme.css"
+       data-dumpling-theme="name">, plus the mobile sheet. Themes
+       live in media/themes/<name>/, with stylesheets in css/,
+       images in img/, and optional bundled fonts in fonts/. The
+       engine never injects, swaps, or removes theme stylesheets:
+       the declaration is the whole mechanism (and, being plain
+       head links, it keeps the first paint styled). */
 
     /* A promise that settles when a stylesheet link finishes, one
      * way or the other. Links declared in the HTML have usually
@@ -2844,61 +2836,11 @@
         });
     };
 
-    const applyThemeStylesheets = function(name) {
-        const head = document.head ||
-            document.getElementsByTagName('head')[0];
-        // Adopt any links already in the document for this theme —
-        // a shell can declare its theme with real <link> tags, which
-        // also keeps the first paint styled — and drop links for
-        // other themes. Inject only when the theme isn't declared.
-        const declared = qsa('link[data-dumpling-theme]');
-        const adopted = declared.filter(function(link) {
-            return link.getAttribute('data-dumpling-theme') === name;
-        });
-        declared.forEach(function(link) {
-            if (!adopted.includes(link)) link.remove();
-        });
-        let links = adopted;
-        if (!links.length) {
-            const main = document.createElement('link');
-            main.rel = 'stylesheet';
-            main.media = 'screen';
-            main.href = themeStylesheetBase + name + '/css/theme.css';
-            main.setAttribute('data-dumpling-theme', name);
-            const mobile = document.createElement('link');
-            mobile.rel = 'stylesheet';
-            mobile.media = 'only screen and (max-width: 640px)';
-            mobile.href = themeStylesheetBase + name + '/css/theme-mobile.css';
-            mobile.setAttribute('data-dumpling-theme', name);
-            head.appendChild(main);
-            head.appendChild(mobile);
-            links = [main, mobile];
-        }
-        themeStylesReady = Promise.all(links.map(watchStylesheet));
-    };
-
-    /* The initial theme: whatever the shell declares with its
-     * <link> tags, else the default. */
-    let currentThemeName = 'dumpling';
-    const declaredTheme =
-        document.querySelector('link[data-dumpling-theme]');
-    if (declaredTheme) {
-        currentThemeName =
-            declaredTheme.getAttribute('data-dumpling-theme');
-    }
-    Object.defineProperty(window.dumpling, 'theme', {
-        enumerable: true,
-        configurable: true,
-        get: function() { return currentThemeName; },
-        set: function(name) {
-            if (typeof name !== 'string' || !name) return;
-            currentThemeName = name;
-            applyThemeStylesheets(name);
-        }
-    });
-    // Make sure the initial theme's stylesheets are in place (a
-    // no-op when the shell declared them itself).
-    applyThemeStylesheets(currentThemeName);
+    /* Resolves once the declared theme stylesheets have loaded (or
+     * failed to). The undo reveal consults computed styles and
+     * measures layout, so it must not outrun the sheets. */
+    const themeStylesReady = Promise.all(
+        qsa('link[data-dumpling-theme]').map(watchStylesheet));
 
     /* Shows the game area. With snap set (an undo load), everything
      * appears instantly and the scroll jumps straight to the newest
