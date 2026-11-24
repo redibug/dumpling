@@ -528,6 +528,31 @@
             this.choices = opts && opts.choices;
             this.minChoices = opts && opts.minChoices;
             this.maxChoices = opts && opts.maxChoices;
+
+            this._contentWritten = false;
+            this._enterArgs = null;
+        }
+        /* Writes the situation's content: the same write the enter
+         * flow performs after the enter hook. An enter hook can call
+         * this to place the content itself — the prose first, then
+         * an askForInput form below it, say — and the flow will not
+         * write the content a second time when the hook returns.
+         * Calling it again during the same enter does nothing, and
+         * outside an enter it has no effect. */
+        writeContent() {
+            if (this._contentWritten || !this._enterArgs) return;
+            this._contentWritten = true;
+            const character = this._enterArgs[0];
+            const system = this._enterArgs[1];
+            if (this.content) {
+                if (typeof this.content === 'function') {
+                    system.write(interpolate(
+                        this.content(), character, system));
+                } else {
+                    system.write(interpolate(
+                        this.content, character, system));
+                }
+            }
         }
         enter(character, system, from) {
             if (this.heading) {
@@ -539,16 +564,11 @@
                         interpolate(this.heading, character, system));
                 }
             }
+            this._contentWritten = false;
+            this._enterArgs = [character, system];
             if (this._enter) this._enter(character, system, from);
-            if (this.content) {
-                if (typeof this.content === 'function') {
-                    system.write(interpolate(
-                        this.content(), character, system));
-                } else {
-                    system.write(interpolate(
-                        this.content, character, system));
-                }
-            }
+            this.writeContent();
+            this._enterArgs = null;
             if (this.choices) {
                 const choices = system.getSituationIdChoices(this.choices,
                                                              this.minChoices,
